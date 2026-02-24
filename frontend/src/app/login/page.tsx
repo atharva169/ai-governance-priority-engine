@@ -13,10 +13,10 @@ export default function LoginPage() {
 
     const handleLogin = (e: React.FormEvent) => {
         e.preventDefault();
-        if (!userId.trim() || !role) return;
+        if (!userId || !role) return;
 
-        localStorage.setItem("userId", userId.trim());
         localStorage.setItem("role", role);
+        localStorage.setItem("userId", userId);
         router.push("/dashboard");
     };
 
