@@ -1,5 +1,6 @@
 const express = require("express");
 const cors = require("cors");
+const { authenticate } = require("./auth/middleware");
 
 const app = express();
 const PORT = 4000;
@@ -11,7 +12,16 @@ app.get("/", (req, res) => {
   res.json({ status: "ok", service: "ai-governance-backend" });
 });
 
-// Future route modules will be mounted under /api
+app.use("/api", authenticate);
+
+const issuesRouter = require("./routes/issues");
+app.use("/api/issues", issuesRouter);
+
+const commitmentsRouter = require("./routes/commitments");
+app.use("/api/commitments", commitmentsRouter);
+
+const briefsRouter = require("./routes/briefs");
+app.use("/api/briefs", briefsRouter);
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
