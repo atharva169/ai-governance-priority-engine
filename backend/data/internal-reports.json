@@ -1,0 +1,38 @@
+[
+    {
+        "id": "RPT-001",
+        "department": "Public Works Department",
+        "summary": "NH-48 service lane contractor has not mobilized equipment since November. Bond forfeiture proceedings recommended.",
+        "riskLevel": "critical",
+        "relatedCommitmentIds": [
+            "CMT-003"
+        ]
+    },
+    {
+        "id": "RPT-002",
+        "department": "Delhi Jal Board",
+        "summary": "East Delhi water supply augmentation project is 40% complete. Pipeline procurement delayed due to vendor dispute.",
+        "riskLevel": "medium",
+        "relatedCommitmentIds": [
+            "CMT-002"
+        ]
+    },
+    {
+        "id": "RPT-003",
+        "department": "Environment & Forests",
+        "summary": "Yamuna floodplain encroachment removal has not commenced. Inter-departmental coordination pending with Revenue and DDA.",
+        "riskLevel": "high",
+        "relatedCommitmentIds": [
+            "CMT-004"
+        ]
+    },
+    {
+        "id": "RPT-004",
+        "department": "Social Welfare Department",
+        "summary": "Pension digitization pilot in Shahdara district shows 62% Aadhaar-bank linkage. Remaining beneficiaries require manual verification.",
+        "riskLevel": "medium",
+        "relatedCommitmentIds": [
+            "CMT-005"
+        ]
+    }
+]

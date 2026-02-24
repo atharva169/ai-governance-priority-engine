@@ -1,0 +1,80 @@
+[
+    {
+        "id": "GRV-001",
+        "title": "Persistent waterlogging in Dwarka Sector 12",
+        "description": "Residents report chronic waterlogging during monsoon season causing traffic disruption and health hazards. Drainage infrastructure is outdated and undersized for current population density.",
+        "category": "Infrastructure",
+        "region": "Dwarka, New Delhi",
+        "complaintsCount": 342,
+        "sentimentSeverity": 4,
+        "daysPending": 87,
+        "publicVisibility": 5,
+        "escalationRisk": 4,
+        "status": "open"
+    },
+    {
+        "id": "GRV-002",
+        "title": "Irregular water supply in Laxmi Nagar ward",
+        "description": "Multiple households in Laxmi Nagar report water supply limited to 45 minutes per day. Tanker dependency has increased threefold over the last quarter.",
+        "category": "Water Supply",
+        "region": "Laxmi Nagar, East Delhi",
+        "complaintsCount": 189,
+        "sentimentSeverity": 3,
+        "daysPending": 45,
+        "publicVisibility": 3,
+        "escalationRisk": 3,
+        "status": "open"
+    },
+    {
+        "id": "GRV-003",
+        "title": "Unfinished road construction on NH-48 service lane",
+        "description": "Road reconstruction project on the NH-48 service lane near Mahipalpur has been stalled for over 120 days. Commuters face daily accidents and severe congestion.",
+        "category": "Roads & Transport",
+        "region": "Mahipalpur, South Delhi",
+        "complaintsCount": 478,
+        "sentimentSeverity": 5,
+        "daysPending": 124,
+        "publicVisibility": 5,
+        "escalationRisk": 5,
+        "status": "escalated"
+    },
+    {
+        "id": "GRV-004",
+        "title": "Overcrowding at Rajiv Chowk metro station",
+        "description": "Peak-hour overcrowding at Rajiv Chowk has led to multiple safety incidents. Platform management and crowd control measures are inadequate.",
+        "category": "Public Transport",
+        "region": "Central Delhi",
+        "complaintsCount": 156,
+        "sentimentSeverity": 3,
+        "daysPending": 32,
+        "publicVisibility": 4,
+        "escalationRisk": 3,
+        "status": "under-review"
+    },
+    {
+        "id": "GRV-005",
+        "title": "Illegal dumping near Yamuna floodplain",
+        "description": "Industrial units are disposing untreated waste along the Yamuna floodplain in Wazirabad segment. Local residents report foul odour and contaminated groundwater.",
+        "category": "Environment",
+        "region": "Wazirabad, North Delhi",
+        "complaintsCount": 267,
+        "sentimentSeverity": 5,
+        "daysPending": 203,
+        "publicVisibility": 4,
+        "escalationRisk": 5,
+        "status": "open"
+    },
+    {
+        "id": "GRV-006",
+        "title": "Delayed pension disbursement for senior citizens",
+        "description": "Over 1,200 beneficiaries in Shahdara district have not received old-age pension for three consecutive months. Helpline remains unresponsive.",
+        "category": "Social Welfare",
+        "region": "Shahdara, East Delhi",
+        "complaintsCount": 98,
+        "sentimentSeverity": 4,
+        "daysPending": 91,
+        "publicVisibility": 2,
+        "escalationRisk": 4,
+        "status": "open"
+    }
+]

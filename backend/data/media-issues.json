@@ -1,0 +1,38 @@
+[
+    {
+        "id": "MED-001",
+        "headline": "Delhi waterlogging exposes drainage failure — residents demand accountability",
+        "sentiment": "negative",
+        "publicImpactLevel": 5,
+        "linkedGrievanceIds": [
+            "GRV-001"
+        ]
+    },
+    {
+        "id": "MED-002",
+        "headline": "NH-48 stalled road project enters fourth month — commuter frustration peaks",
+        "sentiment": "negative",
+        "publicImpactLevel": 4,
+        "linkedGrievanceIds": [
+            "GRV-003"
+        ]
+    },
+    {
+        "id": "MED-003",
+        "headline": "Yamuna pollution: NGT issues fresh notice to Delhi government",
+        "sentiment": "negative",
+        "publicImpactLevel": 5,
+        "linkedGrievanceIds": [
+            "GRV-005"
+        ]
+    },
+    {
+        "id": "MED-004",
+        "headline": "Metro crowd surge — safety audit recommended after platform incident",
+        "sentiment": "cautionary",
+        "publicImpactLevel": 3,
+        "linkedGrievanceIds": [
+            "GRV-004"
+        ]
+    }
+]

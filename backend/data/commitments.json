@@ -1,0 +1,68 @@
+[
+    {
+        "id": "CMT-001",
+        "title": "Complete Dwarka drainage overhaul by Q2 2026",
+        "announcedDate": "2025-08-15",
+        "status": "delayed",
+        "daysPending": 194,
+        "linkedGrievanceIds": [
+            "GRV-001"
+        ],
+        "riskLevel": "high"
+    },
+    {
+        "id": "CMT-002",
+        "title": "24x7 piped water supply to East Delhi wards",
+        "announcedDate": "2025-06-01",
+        "status": "in-progress",
+        "daysPending": 269,
+        "linkedGrievanceIds": [
+            "GRV-002"
+        ],
+        "riskLevel": "medium"
+    },
+    {
+        "id": "CMT-003",
+        "title": "Completion of NH-48 service lane reconstruction",
+        "announcedDate": "2025-04-10",
+        "status": "stalled",
+        "daysPending": 321,
+        "linkedGrievanceIds": [
+            "GRV-003"
+        ],
+        "riskLevel": "critical"
+    },
+    {
+        "id": "CMT-004",
+        "title": "Yamuna floodplain clean-up mission Phase 1",
+        "announcedDate": "2025-10-02",
+        "status": "not-started",
+        "daysPending": 146,
+        "linkedGrievanceIds": [
+            "GRV-005"
+        ],
+        "riskLevel": "high"
+    },
+    {
+        "id": "CMT-005",
+        "title": "Digitize pension disbursement across all districts",
+        "announcedDate": "2025-11-01",
+        "status": "in-progress",
+        "daysPending": 116,
+        "linkedGrievanceIds": [
+            "GRV-006"
+        ],
+        "riskLevel": "medium"
+    },
+    {
+        "id": "CMT-006",
+        "title": "Install crowd management systems at 5 metro stations",
+        "announcedDate": "2025-09-15",
+        "status": "in-progress",
+        "daysPending": 163,
+        "linkedGrievanceIds": [
+            "GRV-004"
+        ],
+        "riskLevel": "low"
+    }
+]
