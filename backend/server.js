@@ -26,6 +26,9 @@ app.use("/api/briefs", briefsRouter);
 const askEngineRouter = require("./routes/askEngine");
 app.use("/api/ask", askEngineRouter);
 
+const auditRouter = require("./routes/audit");
+app.use("/api/audit", auditRouter);
+
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
