@@ -12,7 +12,7 @@ import {
     ChevronDown,
 } from "lucide-react";
 
-const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:4000";
 
 interface AuditEntry {
     id: string;
@@ -54,7 +54,7 @@ export default function AuditPage() {
         setError(null);
         try {
             const token = localStorage.getItem("token") || "";
-            const res = await fetch(`${API}/api/audit`, {
+            const res = await fetch(`${API_BASE_URL}/api/audit`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
             if (!res.ok) {

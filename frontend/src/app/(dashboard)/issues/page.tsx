@@ -160,11 +160,11 @@ function IssuesContent() {
                 const token = localStorage.getItem("token") || "";
                 const headers = { Authorization: `Bearer ${token}` };
 
-                const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+                const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:4000";
                 const [issuesRes, statsRes, commitmentsRes] = await Promise.all([
-                    fetch(`${API_BASE}/api/issues`, { headers }),
-                    fetch(`${API_BASE}/api/issues/statistics`, { headers }),
-                    fetch(`${API_BASE}/api/commitments`, { headers }),
+                    fetch(`${API_BASE_URL}/api/issues`, { headers }),
+                    fetch(`${API_BASE_URL}/api/issues/statistics`, { headers }),
+                    fetch(`${API_BASE_URL}/api/commitments`, { headers }),
                 ]);
 
                 if (!issuesRes.ok) throw new Error("Failed to fetch issues.");

@@ -39,7 +39,7 @@ interface ChangeReport {
     noChanges?: boolean;
 }
 
-const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:4000";
 
 export function ChangesPanel() {
     const [report, setReport] = useState<ChangeReport | null>(null);
@@ -53,7 +53,7 @@ export function ChangesPanel() {
                 const headers = { Authorization: `Bearer ${token}`, "Content-Type": "application/json" };
 
                 // Step 1: Record this login and get days since last login
-                const loginRes = await fetch(`${API}/api/simulation/record-login`, {
+                const loginRes = await fetch(`${API_BASE_URL}/api/simulation/record-login`, {
                     method: "POST", headers,
                 });
                 if (!loginRes.ok) { setLoading(false); return; }
@@ -62,7 +62,7 @@ export function ChangesPanel() {
                 if (daysAway <= 0) { setLoading(false); return; }
 
                 // Step 2: Get the change report for those days
-                const changesRes = await fetch(`${API}/api/simulation/changes?daysAway=${daysAway}`, { headers });
+                const changesRes = await fetch(`${API_BASE_URL}/api/simulation/changes?daysAway=${daysAway}`, { headers });
                 if (!changesRes.ok) { setLoading(false); return; }
                 const data = await changesRes.json();
                 setReport(data);

@@ -13,7 +13,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Eye, EyeOff, Shield, MapPin, Loader2, Zap, ChevronDown } from "lucide-react";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:4000";
 
 interface State {
     code: string;
@@ -42,7 +42,7 @@ export default function LoginPage() {
 
     // Fetch states on mount
     useEffect(() => {
-        fetch(`${API_BASE}/api/auth/states`)
+        fetch(`${API_BASE_URL}/api/auth/states`)
             .then((res) => res.json())
             .then((data) => {
                 setStates(data.states || []);
