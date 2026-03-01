@@ -31,7 +31,10 @@ export default function AskPage() {
         try {
             const token = localStorage.getItem("token") || "";
 
-            const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:4000";
+            if (!process.env.NEXT_PUBLIC_API_BASE_URL) {
+              throw new Error("API base URL not configured");
+            }
+            const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
             const response = await fetch(`${API_BASE_URL}/api/ask`, {
                 method: "POST",
                 headers: {

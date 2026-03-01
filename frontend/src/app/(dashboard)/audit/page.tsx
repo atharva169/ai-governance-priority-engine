@@ -12,7 +12,10 @@ import {
     ChevronDown,
 } from "lucide-react";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:4000";
+if (!process.env.NEXT_PUBLIC_API_BASE_URL) {
+  throw new Error("API base URL not configured");
+}
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 interface AuditEntry {
     id: string;
