@@ -64,5 +64,71 @@
             "GRV-004"
         ],
         "riskLevel": "low"
+    },
+    {
+        "id": "CMT-007",
+        "title": "Narela sewer network rehabilitation programme",
+        "announcedDate": "2025-07-20",
+        "status": "delayed",
+        "daysPending": 220,
+        "linkedGrievanceIds": [
+            "GRV-016"
+        ],
+        "riskLevel": "high"
+    },
+    {
+        "id": "CMT-008",
+        "title": "Deploy additional DTC buses on Najafgarh route",
+        "announcedDate": "2025-12-01",
+        "status": "not-started",
+        "daysPending": 86,
+        "linkedGrievanceIds": [
+            "GRV-021"
+        ],
+        "riskLevel": "medium"
+    },
+    {
+        "id": "CMT-009",
+        "title": "Drain desilting drive across South Delhi wards",
+        "announcedDate": "2025-09-01",
+        "status": "in-progress",
+        "daysPending": 178,
+        "linkedGrievanceIds": [
+            "GRV-024"
+        ],
+        "riskLevel": "high"
+    },
+    {
+        "id": "CMT-010",
+        "title": "Emergency manhole cover replacement programme",
+        "announcedDate": "2025-11-15",
+        "status": "stalled",
+        "daysPending": 102,
+        "linkedGrievanceIds": [
+            "GRV-030"
+        ],
+        "riskLevel": "critical"
+    },
+    {
+        "id": "CMT-011",
+        "title": "Sangam Vihar solid waste management upgrade",
+        "announcedDate": "2025-08-01",
+        "status": "delayed",
+        "daysPending": 208,
+        "linkedGrievanceIds": [
+            "GRV-026"
+        ],
+        "riskLevel": "high"
+    },
+    {
+        "id": "CMT-012",
+        "title": "Mayur Vihar RO plant repair and commissioning",
+        "announcedDate": "2025-12-15",
+        "status": "in-progress",
+        "daysPending": 72,
+        "linkedGrievanceIds": [
+            "GRV-028"
+        ],
+        "riskLevel": "medium"
     }
 ]

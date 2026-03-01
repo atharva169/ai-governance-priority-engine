@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import Link from "next/link";
+import { ExternalLink } from "lucide-react";
 
 interface Commitment {
     id: string;
@@ -9,6 +11,7 @@ interface Commitment {
     status: "Delayed" | "On Track" | "Completed" | "At Risk";
     daysPending: number;
     grievanceIds?: string[];
+    linkedGrievanceIds?: string[];
 }
 
 export default function CommitmentsPage() {
@@ -19,9 +22,9 @@ export default function CommitmentsPage() {
     useEffect(() => {
         async function fetchCommitments() {
             try {
-                const userId = localStorage.getItem("userId") || "unknown";
+                const token = localStorage.getItem("token") || "";
                 const response = await fetch("http://localhost:4000/api/commitments", {
-                    headers: { "x-user-id": userId },
+                    headers: { "Authorization": `Bearer ${token}` },
                 });
 
                 if (!response.ok) {
@@ -85,18 +88,18 @@ export default function CommitmentsPage() {
     return (
         <div className="space-y-6 pb-8">
             <div>
-                <h1 className="text-2xl font-semibold tracking-tight text-slate-900 uppercase">
+                <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100 uppercase">
                     Commitments Register
                 </h1>
-                <p className="mt-1 text-sm text-slate-500">
+                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
                     Tracking fulfillment of institutional pledges, operational delays, and associated grievances.
                 </p>
             </div>
 
-            <div className="rounded-sm border border-slate-200 bg-white overflow-hidden shadow-sm">
+            <div className="rounded-sm border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 overflow-hidden shadow-sm">
                 <div className="overflow-x-auto">
                     <table className="w-full text-sm text-left align-middle">
-                        <thead className="text-xs uppercase tracking-wider text-slate-500 bg-slate-50 border-b border-slate-200">
+                        <thead className="text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
                             <tr>
                                 <th scope="col" className="px-6 py-4 font-semibold">Commitment Title</th>
                                 <th scope="col" className="px-6 py-4 font-semibold text-center">Status</th>
@@ -105,21 +108,21 @@ export default function CommitmentsPage() {
                                 <th scope="col" className="px-6 py-4 font-semibold">Linked Grievances</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-200">
+                        <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
                             {commitments.length === 0 ? (
                                 <tr>
                                     <td colSpan={5} className="px-6 py-8 text-center text-slate-500">
-                                        No commitments found in the active register.
+                                        No commitments recorded.
                                     </td>
                                 </tr>
                             ) : (
                                 commitments.map((commitment) => {
                                     const severity = getDelaySeverity(commitment.daysPending);
                                     return (
-                                        <tr key={commitment.id} className="hover:bg-slate-50 transition-colors">
+                                        <tr key={commitment.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
                                             <td className="px-6 py-4">
-                                                <div className="font-medium text-slate-900">{commitment.title}</div>
-                                                <div className="text-xs text-slate-500 mt-1 uppercase tracking-wider">{commitment.department}</div>
+                                                <div className="font-medium text-slate-900 dark:text-slate-100">{commitment.title}</div>
+                                                <div className="text-xs text-slate-500 dark:text-slate-400 mt-1 uppercase tracking-wider">{commitment.department}</div>
                                             </td>
                                             <td className="px-6 py-4 text-center">
                                                 <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium uppercase tracking-wide ${getStatusBadge(commitment.status)}`}>
@@ -127,7 +130,7 @@ export default function CommitmentsPage() {
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 text-right whitespace-nowrap">
-                                                <span className="font-semibold text-slate-700">{commitment.daysPending}</span>
+                                                <span className="font-semibold text-slate-700 dark:text-slate-300">{commitment.daysPending}</span>
                                             </td>
                                             <td className="px-6 py-4 text-center">
                                                 <span className={`inline-flex items-center px-2.5 py-0.5 rounded-sm border text-xs font-semibold uppercase ${severity.classes}`}>
@@ -135,17 +138,25 @@ export default function CommitmentsPage() {
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4">
-                                                {commitment.grievanceIds && commitment.grievanceIds.length > 0 ? (
-                                                    <div className="flex flex-wrap gap-1 border-l-2 border-slate-200 pl-3">
-                                                        {commitment.grievanceIds.map((gId) => (
-                                                            <span key={gId} className="px-1.5 py-0.5 text-[10px] font-mono tracking-tighter bg-slate-100 text-slate-600 border border-slate-200 rounded">
-                                                                {gId}
-                                                            </span>
-                                                        ))}
-                                                    </div>
-                                                ) : (
-                                                    <span className="text-xs text-slate-400 italic pl-3 border-l-2 border-transparent">None</span>
-                                                )}
+                                                {(() => {
+                                                    const ids = commitment.linkedGrievanceIds || commitment.grievanceIds || [];
+                                                    return ids.length > 0 ? (
+                                                        <div className="flex flex-wrap gap-1.5 border-l-2 border-blue-200 pl-3">
+                                                            {ids.map((gId) => (
+                                                                <Link
+                                                                    key={gId}
+                                                                    href={`/issues?highlight=${gId}`}
+                                                                    className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-mono tracking-tighter bg-blue-50 text-blue-700 border border-blue-200 rounded hover:bg-blue-100 hover:border-blue-300 transition-colors cursor-pointer group"
+                                                                >
+                                                                    {gId}
+                                                                    <ExternalLink className="h-2.5 w-2.5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                                                </Link>
+                                                            ))}
+                                                        </div>
+                                                    ) : (
+                                                        <span className="text-xs text-slate-400 italic pl-3 border-l-2 border-transparent">None</span>
+                                                    );
+                                                })()}
                                             </td>
                                         </tr>
                                     );

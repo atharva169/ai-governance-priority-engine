@@ -1,4 +1,4 @@
-const { scoreIssue } = require("./scoringEngine");
+const { rankAllIssues } = require("./scoringEngine");
 
 const QUERY_PATTERNS = [
     {
@@ -26,7 +26,7 @@ function matchIntent(query) {
     return null;
 }
 
-function handleQuery(query, { grievances, commitments }) {
+function handleQuery(query, { grievances, commitments, mediaIssues = [] }) {
     const intent = matchIntent(query);
 
     if (!intent) {
@@ -41,16 +41,27 @@ function handleQuery(query, { grievances, commitments }) {
         };
     }
 
+    const ranked = rankAllIssues(grievances, { mediaIssues, commitments });
+
     if (intent === "URGENT_ATTENTION") {
-        const scored = grievances
-            .map((g) => ({ ...g, ...scoreIssue(g) }))
+        const critical = ranked
             .filter((g) => g.label === "Critical")
-            .sort((a, b) => b.score - a.score);
+            .map((g) => ({
+                rank: g.rank,
+                id: g.id,
+                title: g.title,
+                score: g.score,
+                issueType: g.issueType,
+                region: g.region,
+                aiReasoning: g.aiReasoning,
+                daysPending: g.daysPending,
+                complaintsCount: g.complaintsCount,
+            }));
 
         return {
             intent,
-            count: scored.length,
-            results: scored,
+            count: critical.length,
+            results: critical,
         };
     }
 
@@ -67,10 +78,17 @@ function handleQuery(query, { grievances, commitments }) {
     }
 
     if (intent === "ESCALATION_RISK") {
-        const atRisk = grievances
+        const atRisk = ranked
             .filter((g) => g.escalationRisk >= 4)
-            .map((g) => ({ ...g, ...scoreIssue(g) }))
-            .sort((a, b) => b.escalationRisk - a.escalationRisk);
+            .map((g) => ({
+                rank: g.rank,
+                id: g.id,
+                title: g.title,
+                score: g.score,
+                escalationRisk: g.escalationRisk,
+                region: g.region,
+                aiReasoning: g.aiReasoning,
+            }));
 
         return {
             intent,

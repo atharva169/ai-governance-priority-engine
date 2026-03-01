@@ -34,5 +34,41 @@
         "linkedGrievanceIds": [
             "GRV-004"
         ]
+    },
+    {
+        "id": "MED-005",
+        "headline": "Narela residents block highway over sewer overflow — traffic paralysed for 6 hours",
+        "sentiment": "negative",
+        "publicImpactLevel": 5,
+        "linkedGrievanceIds": [
+            "GRV-016"
+        ]
+    },
+    {
+        "id": "MED-006",
+        "headline": "Open manholes claim another victim on Ring Road — family demands FIR",
+        "sentiment": "negative",
+        "publicImpactLevel": 5,
+        "linkedGrievanceIds": [
+            "GRV-030"
+        ]
+    },
+    {
+        "id": "MED-007",
+        "headline": "Stray dog packs terrorize Dwarka schoolchildren — parents stage protest",
+        "sentiment": "negative",
+        "publicImpactLevel": 4,
+        "linkedGrievanceIds": [
+            "GRV-020"
+        ]
+    },
+    {
+        "id": "MED-008",
+        "headline": "Chandni Chowk ambulance gridlock — 40-minute delay costs cardiac patient's life",
+        "sentiment": "negative",
+        "publicImpactLevel": 5,
+        "linkedGrievanceIds": [
+            "GRV-031"
+        ]
     }
 ]

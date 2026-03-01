@@ -34,5 +34,32 @@
         "relatedCommitmentIds": [
             "CMT-005"
         ]
+    },
+    {
+        "id": "RPT-005",
+        "department": "MCD North Zone",
+        "summary": "Narela sewer rehabilitation tender was floated but received only 1 bid due to difficult terrain. Re-tendering recommended with revised scope.",
+        "riskLevel": "high",
+        "relatedCommitmentIds": [
+            "CMT-007"
+        ]
+    },
+    {
+        "id": "RPT-006",
+        "department": "Delhi Transport Corporation",
+        "summary": "Fleet allocation review shows 14 buses available for Najafgarh route augmentation but driver shortage (18 vacancies) is blocking deployment.",
+        "riskLevel": "medium",
+        "relatedCommitmentIds": [
+            "CMT-008"
+        ]
+    },
+    {
+        "id": "RPT-007",
+        "department": "MCD South Zone",
+        "summary": "South Delhi drain desilting programme is 55% complete. Mehrauli drain requires heavy machinery not currently available in the zone's equipment pool.",
+        "riskLevel": "high",
+        "relatedCommitmentIds": [
+            "CMT-009"
+        ]
     }
 ]

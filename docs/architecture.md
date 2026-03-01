@@ -1,124 +1,240 @@
 # AI Governance Priority & Accountability Engine
-Domain: Digital Democracy
-Category: Open Innovation
+Domain: Digital Democracy  
+Category: Open Innovation  
+
+---
 
 ## 1. System Purpose
-This system is a decision-support platform for public governance offices.
-It prioritizes governance issues, tracks public commitments, and generates leadership-ready intelligence briefs.
-It does NOT automate decisions and does NOT interact with citizens directly.
 
-## 2. Primary Users
-- Admin (IT / Senior Officer)
-- Officer (Grievance & War-room Staff)
-- Leader (Read-only: MLA / MP / Minister)
+This system is an **AI-assisted decision-support platform** for public governance offices.
 
-## 3. Core Functional Modules
+It helps administrative teams and public leaders:
+- prioritize governance issues intelligently
+- track public commitments and follow-through
+- surface accountability risks
+- consume leadership-ready briefs
 
-### 3.1 Authentication & Authorization
-- Role-based login (Admin, Officer, Leader)
-- No public signups
-- Session-based authentication
-- Role-based route protection
-- Lightweight audit logging for actions
+The system **does NOT**:
+- automate decisions
+- interact with citizens directly
+- replace existing grievance portals
 
-### 3.2 Data Ingestion Layer (Mocked)
-The system ingests structured governance data:
-- Citizen grievances
-- Public commitments / promises
-- Media issues
-- Internal reports
+It **augments governance decision-making**.
 
-Data is mocked using JSON files but structured as real government systems.
+---
 
-### 3.3 Priority Scoring Engine (Core Intelligence)
-Each issue is scored using explainable weighted logic:
-- Complaint volume
-- Sentiment severity
-- Time pending
-- Public visibility
-- Escalation risk
+## 2. Target Users & Roles
 
-Outputs:
+### Primary Users
+- **Admin**  
+  Senior officer / IT administrator  
+  Full access, audit visibility
+
+- **Officer**  
+  Grievance cell / war-room staff  
+  Manages issues and commitments
+
+- **Leader (Read-Only)**  
+  MLA / MP / Minister  
+  Consumes briefs and dashboards only
+
+Citizens are **not users** of this system.
+
+---
+
+## 3. High-Level Architecture
+
+The system consists of five layers:
+
+1. Authentication & Access Control  
+2. Data Ingestion (Mocked)  
+3. Intelligence & Scoring Engine  
+4. Accountability & Audit Layer  
+5. Leadership Intelligence Interface  
+
+All layers are modular and independently testable.
+
+---
+
+## 4. Authentication & Authorization Model
+
+- Authentication is **session-simulated**, not production-grade
+- Requests must include:
+  - `x-user-id` header
+- Users are mocked in code with predefined roles
+
+Authorization rules:
+- Admin: full access
+- Officer: operational access
+- Leader: read-only access
+
+No OAuth, no OTP, no citizen login.
+
+---
+
+## 5. Data Layer (Mocked for MVP)
+
+Data is stored as structured JSON files to simulate real governance systems.
+
+### Data Types
+- **Citizen Grievances**
+- **Public Commitments / Promises**
+- **Media-Reported Issues**
+- **Internal Administrative Reports**
+
+The mock data structure must resemble real government data closely.
+
+No databases are used in MVP.
+
+---
+
+## 6. Intelligence & Decision Engine (CORE)
+
+### 6.1 Priority Scoring Engine
+
+Each governance issue is evaluated using **explainable weighted logic**:
+
+| Factor | Weight |
+|------|-------|
+| Complaint volume | 25% |
+| Sentiment severity | 20% |
+| Time pending | 20% |
+| Public visibility | 20% |
+| Escalation risk | 15% |
+
+Output per issue:
 - Priority score (0–100)
-- Priority label (Critical, Attention, Stable)
-- AI-generated explanation for score
+- Priority label:
+  - Critical (≥70)
+  - Attention Required (40–69)
+  - Stable (<40)
+- Natural-language explanation:
+  “This issue is critical because…”
 
-### 3.4 Accountability & Commitment Tracker
-Tracks:
-- Promise title
+This explainability is mandatory.
+
+---
+
+### 6.2 Accountability & Commitment Tracking
+
+For each public commitment:
+- Title
 - Announcement date
 - Current status
 - Days pending
 - Linked grievances
 - Risk level
 
-Visual indicators highlight delayed commitments.
+Delayed commitments are visually and logically flagged.
 
-### 3.5 Leadership Intelligence Briefs
-Generates:
+---
+
+### 6.3 Leadership Intelligence Briefs
+
+The system generates concise executive briefs:
 - Top critical issues today
 - Most delayed commitments
-- High escalation risk items
-- What changed since yesterday
+- High escalation-risk items
+- “What changed since yesterday?”
 
-Briefs are concise, neutral, and policy-oriented.
+Briefs are:
+- neutral
+- policy-oriented
+- non-political
+- readable in under 2 minutes
 
-### 3.6 Ask the Governance Engine
-Query-based intelligence interface:
+---
+
+### 6.4 Ask the Governance Engine
+
+A **query-based intelligence interface**, not a chatbot.
+
+Supported queries include:
 - “What needs urgent attention today?”
 - “Which commitments are overdue?”
+- “Which issues are likely to escalate?”
 
-This is not a chatbot.
-It returns structured insights only.
+Outputs are structured insights, not free-form chat.
 
-## 4. Technology Stack
+---
 
-Frontend:
+## 7. Backend API Surface (MVP)
+
+All APIs are prefixed with `/api`.
+
+- `GET /api/issues`  
+  Returns grievances with priority scores  
+  Roles: Admin, Officer
+
+- `GET /api/commitments`  
+  Returns tracked commitments  
+  Roles: Admin, Officer, Leader
+
+- `GET /api/briefs`  
+  Returns leadership intelligence brief  
+  Roles: Admin, Leader
+
+- `POST /api/ask`  
+  Accepts `{ query }`  
+  Returns structured insight  
+  Roles: Admin, Officer
+
+- `GET /api/audit`  
+  Returns audit trail  
+  Roles: Admin only
+
+---
+
+## 8. Audit & Accountability Layer
+
+All sensitive actions are logged:
+- user id
+- role
+- action
+- timestamp
+
+Audit logs are stored in memory for MVP.
+
+This layer enforces internal accountability.
+
+---
+
+## 9. Technology Stack (Locked)
+
+Frontend (later):
 - Next.js (App Router)
 - Tailwind CSS
-- Component-based dashboard UI
 
 Backend:
-- Node.js + Express
-- Modular service architecture
+- Node.js
+- Express
 
-AI Layer:
-- Explainable scoring logic
-- AI used only for explanation and summarization
+AI Usage:
+- Explainable scoring
+- Brief summarization
+- No autonomous decision-making
 
-Data Layer:
-- JSON mock data for MVP
+Data:
+- JSON mock files only
 
-Security:
-- Role-based access
-- Audit trail
-- No real citizen data
+---
 
-## 5. Folder Structure (Required)
+## 10. Constraints (Non-Negotiable)
 
-frontend/
-- app/
-  - login/
-  - dashboard/
-  - commitments/
-  - briefs/
-  - ask-engine/
-
-backend/
-- auth/
-- routes/
-- engine/
-- data/
-- utils/
-
-## 6. Constraints
-- No citizen-facing app
+- No citizen-facing UI
 - No chatbot-first UX
-- No external API dependency
+- No databases
+- No external APIs
+- No OAuth / JWT
 - Must be demoable offline
+- Architecture-first development
 
-## 7. Success Criteria
-- Clear prioritization logic
-- Visible accountability timelines
-- Leader-ready insights
-- Institutional credibility
+---
+
+## 11. Success Criteria
+
+The system is successful if:
+- Priority decisions are explainable
+- Accountability timelines are visible
+- Leaders receive actionable briefs
+- Governance risks are surfaced early

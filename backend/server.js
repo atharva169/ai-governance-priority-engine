@@ -12,6 +12,11 @@ app.get("/", (req, res) => {
   res.json({ status: "ok", service: "ai-governance-backend" });
 });
 
+// Auth routes — NOT behind authenticate middleware
+const authRoutes = require("./routes/authRoutes");
+app.use("/api/auth", authRoutes);
+
+// All other /api routes require authentication
 app.use("/api", authenticate);
 
 const issuesRouter = require("./routes/issues");
@@ -28,6 +33,9 @@ app.use("/api/ask", askEngineRouter);
 
 const auditRouter = require("./routes/audit");
 app.use("/api/audit", auditRouter);
+
+const simulationRouter = require("./routes/simulation");
+app.use("/api/simulation", simulationRouter);
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
