@@ -1,9 +1,54 @@
 "use client";
 
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useMemo, useRef, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { CheckSquare, ExternalLink } from "lucide-react";
+import {
+    Shield,
+    Activity,
+    Users,
+    Clock,
+    Filter,
+    RefreshCw,
+    ChevronDown,
+    MapPin,
+    AlertTriangle,
+    CheckCircle2,
+    ArrowUpRight,
+    ExternalLink,
+    ChevronUp,
+    BarChart3,
+    ArrowUp,
+    ArrowDown,
+    Search,
+    BrainCircuit,
+    Layers,
+    TrendingUp,
+    Target,
+    CheckSquare
+} from "lucide-react";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
+    LineChart,
+    Line,
+    XAxis,
+    YAxis,
+    CartesianGrid,
+    Tooltip as RechartsTooltip,
+    ResponsiveContainer,
+    AreaChart,
+    Area
+} from "recharts";
 
 interface FactorBreakdown {
     raw: number;
@@ -98,7 +143,7 @@ const ISSUE_TYPE_COLORS: Record<string, string> = {
     amenity: "bg-slate-100 text-slate-600 border-slate-200",
 };
 
-export default function IssuesPage() {
+function IssuesContent() {
     const [issues, setIssues] = useState<Issue[]>([]);
     const [stats, setStats] = useState<Statistics | null>(null);
     const [loading, setLoading] = useState(true);
@@ -115,28 +160,26 @@ export default function IssuesPage() {
                 const token = localStorage.getItem("token") || "";
                 const headers = { Authorization: `Bearer ${token}` };
 
+                const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
                 const [issuesRes, statsRes, commitmentsRes] = await Promise.all([
-                    fetch("http://localhost:4000/api/issues", { headers }),
-                    fetch("http://localhost:4000/api/issues/statistics", { headers }),
-                    fetch("http://localhost:4000/api/commitments", { headers }),
+                    fetch(`${API_BASE}/api/issues`, { headers }),
+                    fetch(`${API_BASE}/api/issues/statistics`, { headers }),
+                    fetch(`${API_BASE}/api/commitments`, { headers }),
                 ]);
 
                 if (!issuesRes.ok) throw new Error("Failed to fetch issues.");
+                if (!commitmentsRes.ok) throw new Error("Failed to fetch commitments.");
 
                 const issuesData = await issuesRes.json();
+                const statsData = statsRes.ok ? await statsRes.json() : null;
+                const commitmentsData = await commitmentsRes.json();
+
                 const parsedIssues = Array.isArray(issuesData?.issues) ? issuesData.issues : [];
                 setIssues(parsedIssues);
-
-                if (statsRes.ok) {
-                    const statsData = await statsRes.json();
-                    setStats(statsData);
-                }
-
-                if (commitmentsRes.ok) {
-                    const cmtData = await commitmentsRes.json();
-                    setCommitments(Array.isArray(cmtData?.commitments) ? cmtData.commitments : []);
-                }
-            } catch {
+                if (statsData) setStats(statsData);
+                setCommitments(Array.isArray(commitmentsData?.commitments) ? commitmentsData.commitments : []);
+            } catch (err) {
+                console.error("Fetch error:", err);
                 setError("Unable to retrieve issue data. Data service may be unavailable.");
             } finally {
                 setLoading(false);
@@ -507,5 +550,20 @@ export default function IssuesPage() {
                 </div>
             </div>
         </div>
+    );
+}
+
+export default function IssuesPage() {
+    return (
+        <Suspense fallback={
+            <div className="flex items-center justify-center min-h-screen bg-slate-50 dark:bg-slate-950">
+                <div className="flex flex-col items-center gap-4">
+                    <Shield className="h-12 w-12 text-slate-300 animate-pulse" />
+                    <p className="text-slate-500 font-medium">Loading Intelligence Engine...</p>
+                </div>
+            </div>
+        }>
+            <IssuesContent />
+        </Suspense>
     );
 }

@@ -23,7 +23,8 @@ export default function CommitmentsPage() {
         async function fetchCommitments() {
             try {
                 const token = localStorage.getItem("token") || "";
-                const response = await fetch("http://localhost:4000/api/commitments", {
+                const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+                const response = await fetch(`${API_BASE}/api/commitments`, {
                     headers: { "Authorization": `Bearer ${token}` },
                 });
 

@@ -31,7 +31,8 @@ export default function AskPage() {
         try {
             const token = localStorage.getItem("token") || "";
 
-            const response = await fetch("http://localhost:4000/api/ask", {
+            const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+            const response = await fetch(`${API_BASE}/api/ask`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

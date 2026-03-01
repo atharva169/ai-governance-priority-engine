@@ -1,15 +1,27 @@
 const express = require("express");
 const cors = require("cors");
+const dotenv = require("dotenv");
 const { authenticate } = require("./auth/middleware");
 
-const app = express();
-const PORT = 4000;
+dotenv.config();
 
-app.use(cors());
+const app = express();
+const PORT = process.env.PORT || 4000;
+
+const allowedOrigin = process.env.CORS_ALLOWED_ORIGIN || "http://localhost:3000";
+
+app.use(cors({
+  origin: allowedOrigin,
+  credentials: true
+}));
 app.use(express.json());
 
 app.get("/", (req, res) => {
   res.json({ status: "ok", service: "ai-governance-backend" });
+});
+
+app.get("/health", (req, res) => {
+  res.status(200).json({ status: "OK", timestamp: new Date().toISOString() });
 });
 
 // Auth routes — NOT behind authenticate middleware
@@ -37,6 +49,7 @@ app.use("/api/audit", auditRouter);
 const simulationRouter = require("./routes/simulation");
 app.use("/api/simulation", simulationRouter);
 
-app.listen(PORT, () => {
+app.listen(PORT, "0.0.0.0", () => {
   console.log(`Server running on port ${PORT}`);
+  console.log(`CORS Allowed Origin: ${allowedOrigin}`);
 });

@@ -13,7 +13,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Eye, EyeOff, Shield, MapPin, Loader2, Zap, ChevronDown } from "lucide-react";
 
-const API_BASE = "http://localhost:4000";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
 interface State {
     code: string;

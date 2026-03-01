@@ -39,7 +39,7 @@ interface ChangeReport {
     noChanges?: boolean;
 }
 
-const API = "http://localhost:4000";
+const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
 export function ChangesPanel() {
     const [report, setReport] = useState<ChangeReport | null>(null);
