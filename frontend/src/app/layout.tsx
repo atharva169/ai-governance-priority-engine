@@ -86,6 +86,27 @@ export default function RootLayout({
     setMobileMenuOpen(false);
   }, [pathname]);
 
+  // Keep-alive: ping backend every 10 minutes to prevent Render free tier spin-down
+  useEffect(() => {
+    if (!API_BASE_URL) return; // Skip if no API URL configured
+
+    const keepAlive = async () => {
+      try {
+        await fetch(`${API_BASE_URL}/health`, { method: "GET" });
+      } catch {
+        // Silently fail - this is just to keep the server awake
+      }
+    };
+
+    // Initial ping on mount
+    keepAlive();
+
+    // Set up interval to ping every 10 minutes
+    const interval = setInterval(keepAlive, 10 * 60 * 1000);
+
+    return () => clearInterval(interval);
+  }, []);
+
   const handleLogout = async () => {
     const token = localStorage.getItem("token");
     try {
