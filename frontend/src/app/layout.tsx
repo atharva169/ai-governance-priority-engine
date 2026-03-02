@@ -17,10 +17,7 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-if (!process.env.NEXT_PUBLIC_API_BASE_URL) {
-  throw new Error("API base URL not configured");
-}
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "";
 
 export default function RootLayout({
   children,

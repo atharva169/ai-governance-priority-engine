@@ -13,11 +13,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Eye, EyeOff, Shield, MapPin, Loader2, Zap, ChevronDown } from "lucide-react";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
-
-if (!API_BASE) {
-  throw new Error("NEXT_PUBLIC_API_BASE_URL is not defined");
-}
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "";
 
 interface State {
     code: string;
