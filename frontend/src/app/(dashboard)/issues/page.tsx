@@ -275,7 +275,7 @@ function IssuesContent() {
             </div>
 
             {/* Statistical Summary Bar */}
-            {stats && (
+            {stats && stats.governanceHealth && stats.distribution && (
                 <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
                     <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-sm p-3">
                         <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Health Score</p>
@@ -292,7 +292,7 @@ function IssuesContent() {
                     </div>
                     <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-sm p-3">
                         <p className="text-[10px] font-semibold text-red-400 uppercase tracking-wider">Critical</p>
-                        <p className="text-2xl font-bold text-red-700">{stats.labelCounts.Critical}</p>
+                        <p className="text-2xl font-bold text-red-700">{stats.labelCounts?.Critical || 0}</p>
                         <p className="text-[10px] text-slate-500 mt-0.5">Score ≥65</p>
                     </div>
                     <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-sm p-3">
@@ -307,7 +307,7 @@ function IssuesContent() {
                     </div>
                     <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-sm p-3">
                         <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Attention</p>
-                        <p className="text-2xl font-bold text-amber-600 dark:text-amber-500">{stats.labelCounts["Attention Required"]}</p>
+                        <p className="text-2xl font-bold text-amber-600 dark:text-amber-500">{stats.labelCounts?.["Attention Required"] || 0}</p>
                         <p className="text-[10px] text-slate-500 mt-0.5">Score 40–64</p>
                     </div>
                 </div>

@@ -194,7 +194,7 @@ export default function DashboardPage() {
             </div>
 
             {/* Governance Health Score — Hero Section */}
-            {stats && (
+            {stats && stats.governanceHealth && (
                 <div className={`rounded-md border p-5 ${getHealthBg(stats.governanceHealth.score)}`}>
                     <div className="flex items-center justify-between flex-wrap gap-4">
                         <div>
@@ -209,20 +209,22 @@ export default function DashboardPage() {
                             </div>
                             <p className="text-sm text-slate-600 dark:text-slate-300 mt-1">{stats.governanceHealth.description}</p>
                         </div>
+                        {stats.labelCounts && (
                         <div className="flex gap-6 text-center">
                             <div>
-                                <div className="text-3xl font-bold text-red-700 dark:text-red-500">{stats.labelCounts.Critical}</div>
+                                <div className="text-3xl font-bold text-red-700 dark:text-red-500">{stats.labelCounts.Critical || 0}</div>
                                 <div className="text-[10px] uppercase tracking-wider text-slate-500 dark:text-slate-400 font-semibold">Critical</div>
                             </div>
                             <div>
-                                <div className="text-3xl font-bold text-amber-600 dark:text-amber-500">{stats.labelCounts["Attention Required"]}</div>
+                                <div className="text-3xl font-bold text-amber-600 dark:text-amber-500">{stats.labelCounts["Attention Required"] || 0}</div>
                                 <div className="text-[10px] uppercase tracking-wider text-slate-500 dark:text-slate-400 font-semibold">Attention</div>
                             </div>
                             <div>
-                                <div className="text-3xl font-bold text-emerald-700 dark:text-emerald-500">{stats.labelCounts.Stable}</div>
+                                <div className="text-3xl font-bold text-emerald-700 dark:text-emerald-500">{stats.labelCounts.Stable || 0}</div>
                                 <div className="text-[10px] uppercase tracking-wider text-slate-500 dark:text-slate-400 font-semibold">Stable</div>
                             </div>
                         </div>
+                        )}
                     </div>
                 </div>
             )}
@@ -248,7 +250,7 @@ export default function DashboardPage() {
             )}
 
             {/* Statistics Row */}
-            {stats && (
+            {stats && stats.distribution && (
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                     <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md p-3">
                         <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Avg Priority</p>
@@ -281,7 +283,7 @@ export default function DashboardPage() {
             )}
 
             {/* Category Risk + Issue Type Analysis */}
-            {stats && (
+            {stats && stats.categoryAnalysis && (
                 <div className="grid gap-6 md:grid-cols-2">
                     {/* Category Risk */}
                     <div className="bg-white border border-slate-200 rounded-md p-4">
