@@ -1,6 +1,6 @@
 const express = require("express");
 const { authorize } = require("../auth/middleware");
-const { loadJSON } = require("../utils/dataLoader");
+const { loadGrievances, loadCommitments, loadMediaIssues } = require("../db/services");
 const { simulateDaysElapsed } = require("../engine/simulationEngine");
 
 const router = express.Router();
@@ -43,15 +43,20 @@ router.post(
 router.get(
     "/changes",
     authorize("admin", "officer", "leader"),
-    (req, res) => {
-        const daysAway = parseInt(req.query.daysAway) || 0;
+    async (req, res) => {
+        try {
+            const daysAway = parseInt(req.query.daysAway) || 0;
 
-        const grievances = loadJSON("grievances.json");
-        const mediaIssues = loadJSON("media-issues.json");
-        const commitments = loadJSON("commitments.json");
+            const grievances = await loadGrievances();
+            const mediaIssues = await loadMediaIssues();
+            const commitments = await loadCommitments();
 
-        const report = simulateDaysElapsed(daysAway, grievances, mediaIssues, commitments);
-        res.json(report);
+            const report = simulateDaysElapsed(daysAway, grievances, mediaIssues, commitments);
+            res.json(report);
+        } catch (err) {
+            console.error("Simulation route error:", err.message);
+            res.status(500).json({ error: "Failed to run simulation" });
+        }
     }
 );
 

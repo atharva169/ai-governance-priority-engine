@@ -1,6 +1,6 @@
 const express = require("express");
 const { authorize, auditLog } = require("../auth/middleware");
-const { loadJSON } = require("../utils/dataLoader");
+const { loadGrievances, loadCommitments, loadMediaIssues } = require("../db/services");
 const { handleQuery } = require("../engine/queryEngine");
 
 const router = express.Router();
@@ -42,29 +42,33 @@ router.post(
     "/",
     authorize("admin", "officer", "leader"),
     auditLog("ASK_QUERY"),
-    (req, res) => {
-        const { query } = req.body;
+    async (req, res) => {
+        try {
+            const { query } = req.body;
 
-        if (!query || typeof query !== "string") {
-            return res.status(400).json({ error: "Missing or invalid query" });
+            if (!query || typeof query !== "string") {
+                return res.status(400).json({ error: "Missing or invalid query" });
+            }
+
+            const allGrievances = await loadGrievances();
+            const allCommitments = await loadCommitments();
+            const mediaIssues = await loadMediaIssues();
+
+            const zone = getUserZone(req.user);
+            const grievances = filterByZone(allGrievances, zone);
+            const commitments = filterCommitmentsByZone(allCommitments, allGrievances, zone);
+
+            const result = handleQuery(query, { grievances, commitments, mediaIssues });
+
+            result.zone = zone || "All Delhi (City-wide)";
+            result.user = req.user.name;
+            result.role = req.user.role;
+
+            res.json(result);
+        } catch (err) {
+            console.error("Ask engine route error:", err.message);
+            res.status(500).json({ error: "Failed to process query" });
         }
-
-        const allGrievances = loadJSON("grievances.json");
-        const allCommitments = loadJSON("commitments.json");
-        const mediaIssues = loadJSON("media-issues.json");
-
-        const zone = getUserZone(req.user);
-        const grievances = filterByZone(allGrievances, zone);
-        const commitments = filterCommitmentsByZone(allCommitments, allGrievances, zone);
-
-        const result = handleQuery(query, { grievances, commitments, mediaIssues });
-
-        // Attach zone context to the response
-        result.zone = zone || "All Delhi (City-wide)";
-        result.user = req.user.name;
-        result.role = req.user.role;
-
-        res.json(result);
     }
 );
 

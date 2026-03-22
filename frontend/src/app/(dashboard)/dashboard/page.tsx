@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { DelhiMap } from "@/components/DelhiMap";
 import { ChangesPanel } from "@/components/ChangesPanel";
 import GuidedTour from "@/components/GuidedTour";
+import LiveFeedPanel from "@/components/LiveFeedPanel";
 
 interface Issue {
     id: string;
@@ -78,6 +79,7 @@ export default function DashboardPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [showTour, setShowTour] = useState(false);
+    const lastRefetchRef = useRef<number>(0);
 
     // Check for guided tour flag on mount
     useEffect(() => {
@@ -118,6 +120,15 @@ export default function DashboardPage() {
 
     useEffect(() => {
         fetchData();
+    }, [fetchData]);
+
+    // Debounced re-fetch when live feed pushes new grievances (max once per 30s)
+    const handleNewGrievance = useCallback(() => {
+        const now = Date.now();
+        if (now - lastRefetchRef.current > 30000) {
+            lastRefetchRef.current = now;
+            fetchData();
+        }
     }, [fetchData]);
 
     const getHealthColor = (score: number) => {
@@ -169,6 +180,9 @@ export default function DashboardPage() {
 
             {/* What Changed Since Last Login */}
             <ChangesPanel />
+
+            {/* Real-Time Live Grievance Feed */}
+            <LiveFeedPanel onNewGrievance={handleNewGrievance} />
 
             <div>
                 <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100 uppercase">

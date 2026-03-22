@@ -1,5 +1,6 @@
 const express = require("express");
 const { authorize, auditLog } = require("../auth/middleware");
+const { loadGrievances, loadCommitments, loadMediaIssues } = require("../db/services");
 const { loadJSON } = require("../utils/dataLoader");
 const { generateBrief } = require("../engine/briefsEngine");
 
@@ -41,19 +42,24 @@ router.get(
     "/",
     authorize("admin", "leader"),
     auditLog("VIEW_BRIEF"),
-    (req, res) => {
-        const allGrievances = loadJSON("grievances.json");
-        const allCommitments = loadJSON("commitments.json");
-        const mediaIssues = loadJSON("media-issues.json");
-        const internalReports = loadJSON("internal-reports.json");
+    async (req, res) => {
+        try {
+            const allGrievances = await loadGrievances();
+            const allCommitments = await loadCommitments();
+            const mediaIssues = await loadMediaIssues();
+            const internalReports = loadJSON("internal-reports.json");
 
-        const zone = getUserZone(req.user);
-        const grievances = filterByZone(allGrievances, zone);
-        const commitments = filterCommitmentsByZone(allCommitments, allGrievances, zone);
+            const zone = getUserZone(req.user);
+            const grievances = filterByZone(allGrievances, zone);
+            const commitments = filterCommitmentsByZone(allCommitments, allGrievances, zone);
 
-        const brief = generateBrief({ grievances, commitments, mediaIssues, internalReports });
+            const brief = generateBrief({ grievances, commitments, mediaIssues, internalReports });
 
-        res.json(brief);
+            res.json(brief);
+        } catch (err) {
+            console.error("Briefs route error:", err.message);
+            res.status(500).json({ error: "Failed to generate brief" });
+        }
     }
 );
 

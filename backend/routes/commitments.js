@@ -1,6 +1,6 @@
 const express = require("express");
 const { authorize, auditLog } = require("../auth/middleware");
-const { loadJSON } = require("../utils/dataLoader");
+const { loadCommitments, loadGrievances } = require("../db/services");
 
 const router = express.Router();
 
@@ -23,9 +23,8 @@ function getUserZone(user) {
  * Filter commitments to those linked to grievances in the user's zone.
  */
 function filterCommitmentsByZone(commitments, grievances, zone) {
-    if (!zone) return commitments; // admin/leader with "All Delhi"
+    if (!zone) return commitments;
 
-    // Find grievance IDs in the user's zone
     const zoneGrievanceIds = grievances
         .filter((g) => g.region && g.region.includes(zone))
         .map((g) => g.id);
@@ -41,21 +40,26 @@ router.get(
     "/",
     authorize("admin", "officer", "leader"),
     auditLog("VIEW_COMMITMENTS"),
-    (req, res) => {
-        const commitments = loadJSON("commitments.json");
-        const grievances = loadJSON("grievances.json");
+    async (req, res) => {
+        try {
+            const commitments = await loadCommitments();
+            const grievances = await loadGrievances();
 
-        const zone = getUserZone(req.user);
-        const filtered = filterCommitmentsByZone(commitments, grievances, zone);
+            const zone = getUserZone(req.user);
+            const filtered = filterCommitmentsByZone(commitments, grievances, zone);
 
-        const enriched = filtered
-            .map((commitment) => ({
-                ...commitment,
-                delaySeverity: getDelaySeverity(commitment.daysPending),
-            }))
-            .sort((a, b) => b.daysPending - a.daysPending);
+            const enriched = filtered
+                .map((commitment) => ({
+                    ...commitment,
+                    delaySeverity: getDelaySeverity(commitment.daysPending),
+                }))
+                .sort((a, b) => b.daysPending - a.daysPending);
 
-        res.json({ count: enriched.length, commitments: enriched });
+            res.json({ count: enriched.length, commitments: enriched });
+        } catch (err) {
+            console.error("Commitments route error:", err.message);
+            res.status(500).json({ error: "Failed to load commitments" });
+        }
     }
 );
 
