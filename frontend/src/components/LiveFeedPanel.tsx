@@ -177,6 +177,16 @@ export default function LiveFeedPanel({ onNewGrievance }: LiveFeedPanelProps) {
                                     <div className="flex items-center gap-3 mt-1 text-[10px] text-slate-400 dark:text-slate-500">
                                         <span>{item.complaintsCount} complaints</span>
                                         <span>{item.daysPending}d pending</span>
+                                        {item.nlpSentiment && (
+                                            <span className={`font-semibold flex items-center gap-0.5 ${
+                                                item.nlpSentiment.severity >= 4 ? "text-red-500" :
+                                                item.nlpSentiment.severity >= 3 ? "text-amber-500" :
+                                                "text-emerald-500"
+                                            }`}>
+                                                <span>{item.nlpSentiment.emoji}</span>
+                                                <span>{item.nlpSentiment.label}</span>
+                                            </span>
+                                        )}
                                         <span className={`font-semibold ${
                                             item.label === "Critical" ? "text-red-500" :
                                             item.label === "Attention Required" ? "text-amber-500" :
@@ -185,6 +195,20 @@ export default function LiveFeedPanel({ onNewGrievance }: LiveFeedPanelProps) {
                                             {item.label}
                                         </span>
                                     </div>
+                                    {/* NLP Keywords */}
+                                    {item.nlpSentiment && item.nlpSentiment.keywords && item.nlpSentiment.keywords.length > 0 && (
+                                        <div className="flex items-center gap-1 mt-1.5 flex-wrap">
+                                            <span className="text-[9px] text-slate-400 dark:text-slate-500">NLP:</span>
+                                            {item.nlpSentiment.keywords.slice(0, 3).map((kw, kwIdx) => (
+                                                <span
+                                                    key={kwIdx}
+                                                    className="text-[9px] font-medium text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 px-1 py-0.5 rounded"
+                                                >
+                                                    {kw}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </div>

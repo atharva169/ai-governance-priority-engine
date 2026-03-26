@@ -11,6 +11,7 @@
 const express = require("express");
 const users = require("../auth/users");
 const liveEngine = require("../engine/liveIngestionEngine");
+const { getZoneTrends } = require("../engine/sentimentEngine");
 const { auditLogs } = require("../auth/middleware");
 const { v4: uuidv4 } = require("uuid");
 
@@ -59,6 +60,7 @@ router.get("/", (req, res) => {
         totalCount: liveEngine.getStats().totalIngested,
         recentGrievances: liveEngine.getRecentGrievances(5),
         stats: liveEngine.getStats(),
+        zoneSentimentTrends: getZoneTrends(),
         timestamp: new Date().toISOString(),
     };
     res.write(`data: ${JSON.stringify(initialData)}\n\n`);

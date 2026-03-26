@@ -56,6 +56,12 @@ app.use("/api/ask", askEngineRouter);
 const auditRouter = require("./routes/audit");
 app.use("/api/audit", auditRouter);
 
+const sentimentRouter = require("./routes/sentiment");
+app.use("/api/sentiment", sentimentRouter);
+
+const zonesRouter = require("./routes/zones");
+app.use("/api/zones", zonesRouter);
+
 const simulationRouter = require("./routes/simulation");
 app.use("/api/simulation", simulationRouter);
 

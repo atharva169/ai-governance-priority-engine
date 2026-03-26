@@ -11,6 +11,7 @@
 
 const { v4: uuidv4 } = require("uuid");
 const { scoreIssue } = require("./scoringEngine");
+const { analyzeSentiment, recordZoneSentiment, getZoneTrends } = require("./sentimentEngine");
 const db = require("../db/connection");
 
 // ─── Zone-Specific Grievance Templates ───
@@ -188,6 +189,10 @@ function generateGrievance() {
     const shortId = uuidv4().split("-")[0];
     const preset = SEVERITY_PRESETS[template.severity] || SEVERITY_PRESETS.medium;
 
+    // ─── NLP Sentiment Analysis ───
+    // Analyze the actual grievance text instead of using static random values
+    const nlpResult = analyzeSentiment(template.desc);
+
     const grievance = {
         id: `GRV-LIVE-${timestamp}-${shortId}`,
         title: template.title,
@@ -197,13 +202,25 @@ function generateGrievance() {
         region: region,
         status: "open",
         complaintsCount: preset.complaintsCount(),
-        sentimentSeverity: preset.sentimentSeverity(),
+        sentimentSeverity: nlpResult.severity, // NLP-computed instead of random
         daysPending: preset.daysPending(),
         publicVisibility: preset.publicVisibility(),
         escalationRisk: preset.escalationRisk(),
         source: "live-portal",
         ingestedAt: new Date().toISOString(),
+        // NLP sentiment metadata
+        nlpSentiment: {
+            rawScore: nlpResult.rawScore,
+            comparative: nlpResult.comparative,
+            severity: nlpResult.severity,
+            label: nlpResult.label,
+            emoji: nlpResult.emoji,
+            keywords: nlpResult.keywords,
+        },
     };
+
+    // Record sentiment for zone trend tracking
+    recordZoneSentiment(region, nlpResult.severity, nlpResult.comparative);
 
     // Score the grievance using the existing AI engine
     const scored = scoreIssue(grievance);
@@ -295,9 +312,11 @@ async function emitGrievance() {
             score: scored.score,
             label: scored.label,
             confidence: scored.confidence,
+            nlpSentiment: grievance.nlpSentiment,
         },
         totalCount: totalIngested,
         topIssuesNow,
+        zoneSentimentTrends: getZoneTrends(),
         timestamp: new Date().toISOString(),
     };
 
@@ -412,10 +431,23 @@ function getRecentGrievances(limit = 5) {
         issueType: g.issueType,
         complaintsCount: g.complaintsCount,
         daysPending: g.daysPending,
+        sentimentSeverity: g.sentimentSeverity,
+        escalationRisk: g.escalationRisk,
         score: g.priorityScore,
         label: g.priorityLabel,
         ingestedAt: g.ingestedAt,
+        nlpSentiment: g.nlpSentiment || null,
     }));
+}
+
+/**
+ * Get NLP sentiment keywords from recent buffer entries.
+ * Used by the sentiment route to aggregate top anger keywords.
+ */
+function getRecentSentimentKeywords(limit = 50) {
+    return buffer.slice(-limit)
+        .filter(g => g.nlpSentiment && g.nlpSentiment.keywords)
+        .map(g => g.nlpSentiment.keywords);
 }
 
 /**
@@ -448,6 +480,7 @@ module.exports = {
     removeListener,
     getStats,
     getRecentGrievances,
+    getRecentSentimentKeywords,
     getLiveGrievances,
     get totalIngested() { return totalIngested; },
 };

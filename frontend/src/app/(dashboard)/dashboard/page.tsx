@@ -5,6 +5,7 @@ import { DelhiMap } from "@/components/DelhiMap";
 import { ChangesPanel } from "@/components/ChangesPanel";
 import GuidedTour from "@/components/GuidedTour";
 import LiveFeedPanel from "@/components/LiveFeedPanel";
+import SentimentTrendPanel from "@/components/SentimentTrendPanel";
 
 interface Issue {
     id: string;
@@ -183,6 +184,9 @@ export default function DashboardPage() {
 
             {/* Real-Time Live Grievance Feed */}
             <LiveFeedPanel onNewGrievance={handleNewGrievance} />
+
+            {/* NLP Sentiment Trend Analysis */}
+            <SentimentTrendPanel />
 
             <div>
                 <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100 uppercase">

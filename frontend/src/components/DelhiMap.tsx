@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
@@ -46,6 +47,7 @@ const ZONES_CENTERS: Record<string, { x: number, y: number }> = {
 
 export function DelhiMap({ issues, userZone }: DelhiMapProps) {
     const [hoveredZone, setHoveredZone] = useState<string | null>(null);
+    const router = useRouter();
 
     // Calculate average score per zone
     const zoneData = useMemo(() => {
@@ -107,8 +109,9 @@ export function DelhiMap({ issues, userZone }: DelhiMapProps) {
                                     <Tooltip key={zone.id}>
                                         <TooltipTrigger asChild>
                                             <g
-                                                onMouseEnter={() => isAccessible && setHoveredZone(zone.id)}
+                                            onMouseEnter={() => isAccessible && setHoveredZone(zone.id)}
                                                 onMouseLeave={() => setHoveredZone(null)}
+                                                onClick={() => isAccessible && router.push(`/dashboard/zone/${encodeURIComponent(zone.id)}`)}
                                                 className={`transition-all duration-300 ${isAccessible ? "cursor-pointer" : "cursor-not-allowed"}`}
                                             >
                                                 <path

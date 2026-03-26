@@ -2,6 +2,15 @@
 
 import { useEffect, useState, useRef, useCallback } from "react";
 
+interface NlpSentiment {
+    rawScore: number;
+    comparative: number;
+    severity: number;
+    label: string;
+    emoji: string;
+    keywords: string[];
+}
+
 interface LiveGrievance {
     id: string;
     title: string;
@@ -15,6 +24,19 @@ interface LiveGrievance {
     score: number;
     label: "Critical" | "Attention Required" | "Stable";
     confidence: string;
+    nlpSentiment?: NlpSentiment;
+}
+
+interface ZoneSentimentTrend {
+    zone: string;
+    avgSeverity: number;
+    avgComparative: number;
+    trend: "rising" | "falling" | "stable";
+    trendArrow: string;
+    changePercent: number;
+    dataPoints: number;
+    label: string;
+    emoji: string;
 }
 
 interface LiveMessage {
@@ -24,6 +46,7 @@ interface LiveMessage {
     topIssuesNow?: { id: string; title: string; region: string; score: number; label: string; issueType: string }[];
     recentGrievances?: LiveGrievance[];
     stats?: { totalIngested: number; activeListeners: number; bufferSize: number };
+    zoneSentimentTrends?: { zones: ZoneSentimentTrend[]; global: { avgSeverity: number; totalDataPoints: number; label: string } };
     timestamp: string;
 }
 
@@ -34,6 +57,8 @@ interface UseLiveStreamReturn {
     isConnected: boolean;
     messageRate: number;
     lastEventAt: string | null;
+    zoneSentimentTrends: ZoneSentimentTrend[];
+    globalSentiment: { avgSeverity: number; totalDataPoints: number; label: string } | null;
 }
 
 const MAX_UPDATES = 10;
@@ -44,6 +69,8 @@ export function useLiveStream(): UseLiveStreamReturn {
     const [topIssues, setTopIssues] = useState<UseLiveStreamReturn["topIssues"]>([]);
     const [isConnected, setIsConnected] = useState(false);
     const [lastEventAt, setLastEventAt] = useState<string | null>(null);
+    const [zoneSentimentTrends, setZoneSentimentTrends] = useState<ZoneSentimentTrend[]>([]);
+    const [globalSentiment, setGlobalSentiment] = useState<UseLiveStreamReturn["globalSentiment"]>(null);
 
     const messageTimestamps = useRef<number[]>([]);
     const [messageRate, setMessageRate] = useState(0);
@@ -90,12 +117,20 @@ export function useLiveStream(): UseLiveStreamReturn {
                         if (data.recentGrievances) {
                             setUpdates(data.recentGrievances.slice(0, MAX_UPDATES));
                         }
+                        if (data.zoneSentimentTrends) {
+                            setZoneSentimentTrends(data.zoneSentimentTrends.zones || []);
+                            setGlobalSentiment(data.zoneSentimentTrends.global || null);
+                        }
                         setLastEventAt(data.timestamp);
                     } else if (data.type === "new-grievance" && data.grievance) {
                         // New grievance arrived
                         setUpdates((prev) => [data.grievance!, ...prev].slice(0, MAX_UPDATES));
                         if (data.totalCount) setTotalCount(data.totalCount);
                         if (data.topIssuesNow) setTopIssues(data.topIssuesNow);
+                        if (data.zoneSentimentTrends) {
+                            setZoneSentimentTrends(data.zoneSentimentTrends.zones || []);
+                            setGlobalSentiment(data.zoneSentimentTrends.global || null);
+                        }
                         setLastEventAt(data.timestamp);
                     }
                 } catch {
@@ -130,5 +165,5 @@ export function useLiveStream(): UseLiveStreamReturn {
         };
     }, [connect]);
 
-    return { updates, totalCount, topIssues, isConnected, messageRate, lastEventAt };
+    return { updates, totalCount, topIssues, isConnected, messageRate, lastEventAt, zoneSentimentTrends, globalSentiment };
 }
