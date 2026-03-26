@@ -6,6 +6,8 @@ import { ChangesPanel } from "@/components/ChangesPanel";
 import GuidedTour from "@/components/GuidedTour";
 import LiveFeedPanel from "@/components/LiveFeedPanel";
 import SentimentTrendPanel from "@/components/SentimentTrendPanel";
+import RadialGauge from "@/components/RadialGauge";
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 
 interface Issue {
     id: string;
@@ -197,38 +199,65 @@ export default function DashboardPage() {
                 </p>
             </div>
 
-            {/* Governance Health Score — Hero Section */}
+            {/* Governance Health Score — Hero Section with Radial Gauge */}
             {stats && stats.governanceHealth && (
-                <div className={`rounded-md border p-5 ${getHealthBg(stats.governanceHealth.score)}`}>
-                    <div className="flex items-center justify-between flex-wrap gap-4">
-                        <div>
-                            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-1">
-                                Governance Health Score
-                            </p>
-                            <div className="flex items-baseline gap-2">
-                                <span className={`text-5xl font-black ${getHealthColor(stats.governanceHealth.score)}`}>
-                                    {stats.governanceHealth.score}
-                                </span>
-                                <span className="text-lg text-slate-400 dark:text-slate-500 font-light">/100</span>
-                            </div>
-                            <p className="text-sm text-slate-600 dark:text-slate-300 mt-1">{stats.governanceHealth.description}</p>
+                <div className="rounded-xl border border-slate-200 dark:border-slate-700/50 bg-gradient-to-br from-white via-slate-50 to-white dark:from-slate-900 dark:via-slate-800/50 dark:to-slate-900 p-6 shadow-sm">
+                    <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+                        {/* Radial Gauge */}
+                        <div className="flex items-center gap-8">
+                            <RadialGauge
+                                score={stats.governanceHealth.score}
+                                label="Governance Health"
+                                sublabel={stats.governanceHealth.description}
+                            />
                         </div>
-                        {stats.labelCounts && (
-                        <div className="flex gap-6 text-center">
-                            <div>
-                                <div className="text-3xl font-bold text-red-700 dark:text-red-500">{stats.labelCounts.Critical || 0}</div>
-                                <div className="text-[10px] uppercase tracking-wider text-slate-500 dark:text-slate-400 font-semibold">Critical</div>
-                            </div>
-                            <div>
-                                <div className="text-3xl font-bold text-amber-600 dark:text-amber-500">{stats.labelCounts["Attention Required"] || 0}</div>
-                                <div className="text-[10px] uppercase tracking-wider text-slate-500 dark:text-slate-400 font-semibold">Attention</div>
-                            </div>
-                            <div>
-                                <div className="text-3xl font-bold text-emerald-700 dark:text-emerald-500">{stats.labelCounts.Stable || 0}</div>
-                                <div className="text-[10px] uppercase tracking-wider text-slate-500 dark:text-slate-400 font-semibold">Stable</div>
-                            </div>
-                        </div>
-                        )}
+
+                        {/* Distribution Donut Chart */}
+                        {stats.labelCounts && (() => {
+                            const distData = [
+                                { name: "Critical", value: stats.labelCounts.Critical || 0, color: "#ef4444" },
+                                { name: "Attention", value: stats.labelCounts["Attention Required"] || 0, color: "#f59e0b" },
+                                { name: "Stable", value: stats.labelCounts.Stable || 0, color: "#10b981" },
+                            ];
+                            return (
+                                <div className="flex items-center gap-6">
+                                    <div className="w-36 h-36">
+                                        <ResponsiveContainer width="100%" height="100%">
+                                            <PieChart>
+                                                <Pie
+                                                    data={distData}
+                                                    cx="50%"
+                                                    cy="50%"
+                                                    innerRadius={38}
+                                                    outerRadius={58}
+                                                    paddingAngle={4}
+                                                    dataKey="value"
+                                                    strokeWidth={0}
+                                                >
+                                                    {distData.map((entry, index) => (
+                                                        <Cell key={index} fill={entry.color} />
+                                                    ))}
+                                                </Pie>
+                                                <Tooltip
+                                                    contentStyle={{ background: '#1e293b', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '12px' }}
+                                                />
+                                            </PieChart>
+                                        </ResponsiveContainer>
+                                    </div>
+                                    <div className="space-y-3">
+                                        {distData.map((d) => (
+                                            <div key={d.name} className="flex items-center gap-3">
+                                                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: d.color }} />
+                                                <div>
+                                                    <div className="text-2xl font-bold" style={{ color: d.color }}>{d.value}</div>
+                                                    <div className="text-[10px] uppercase tracking-wider text-slate-500 dark:text-slate-400 font-semibold">{d.name}</div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            );
+                        })()}
                     </div>
                 </div>
             )}
@@ -253,27 +282,27 @@ export default function DashboardPage() {
                 </div>
             )}
 
-            {/* Statistics Row */}
+            {/* Statistics Row — Glassmorphism Cards */}
             {stats && stats.distribution && (
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md p-3">
+                    <div className="glass rounded-xl p-4 card-hover">
                         <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Avg Priority</p>
-                        <p className="text-2xl font-bold text-slate-800 dark:text-slate-100">{stats.distribution.mean}</p>
+                        <p className="text-2xl font-bold text-slate-800 dark:text-slate-100 animate-count">{stats.distribution.mean}</p>
                         <p className="text-[10px] text-slate-500 dark:text-slate-400">μ ± {stats.distribution.standardDeviation}σ</p>
                     </div>
-                    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md p-3">
+                    <div className="glass rounded-xl p-4 card-hover">
                         <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Median Score</p>
-                        <p className="text-2xl font-bold text-slate-800 dark:text-slate-100">{stats.distribution.median}</p>
+                        <p className="text-2xl font-bold text-slate-800 dark:text-slate-100 animate-count">{stats.distribution.median}</p>
                         <p className="text-[10px] text-slate-500 dark:text-slate-400">50th percentile</p>
                     </div>
-                    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md p-3">
+                    <div className="glass rounded-xl p-4 card-hover">
                         <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Score Range</p>
-                        <p className="text-2xl font-bold text-slate-800 dark:text-slate-100">{stats.distribution.min}–{stats.distribution.max}</p>
+                        <p className="text-2xl font-bold text-slate-800 dark:text-slate-100 animate-count">{stats.distribution.min}–{stats.distribution.max}</p>
                         <p className="text-[10px] text-slate-500 dark:text-slate-400">Min to Max</p>
                     </div>
-                    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md p-3">
+                    <div className="glass rounded-xl p-4 card-hover">
                         <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Total Analyzed</p>
-                        <p className="text-2xl font-bold text-slate-800 dark:text-slate-100">{stats.distribution.count}</p>
+                        <p className="text-2xl font-bold text-slate-800 dark:text-slate-100 animate-count">{stats.distribution.count}</p>
                         <p className="text-[10px] text-slate-500 dark:text-slate-400">Issues scored</p>
                     </div>
                 </div>
@@ -290,26 +319,29 @@ export default function DashboardPage() {
             {stats && stats.categoryAnalysis && (
                 <div className="grid gap-6 md:grid-cols-2">
                     {/* Category Risk */}
-                    <div className="bg-white border border-slate-200 rounded-md p-4">
-                        <h2 className="text-xs font-bold uppercase tracking-widest text-slate-500 mb-3 border-b border-slate-100 pb-2">
+                    <div className="glass rounded-xl p-5">
+                        <h2 className="text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-4 border-b border-slate-200/50 dark:border-slate-700/50 pb-2">
                             Category Risk Analysis
                         </h2>
-                        <div className="space-y-2">
+                        <div className="space-y-2.5">
                             {stats.categoryAnalysis.slice(0, 8).map((cat) => (
-                                <div key={cat.category} className="flex items-center justify-between">
-                                    <span className="text-sm text-slate-700 truncate flex-1">{cat.category}</span>
+                                <div key={cat.category} className="flex items-center justify-between group hover:bg-slate-50/50 dark:hover:bg-slate-800/30 rounded-lg px-2 py-1.5 -mx-2 transition-colors">
+                                    <span className="text-sm text-slate-700 dark:text-slate-300 truncate flex-1">{cat.category}</span>
                                     <div className="flex items-center gap-3">
-                                        <div className="w-24 h-2 bg-slate-100 rounded-full overflow-hidden">
+                                        <div className="w-24 h-2.5 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
                                             <div
-                                                className={`h-full rounded-full ${cat.avgScore >= 65 ? "bg-red-500" : cat.avgScore >= 40 ? "bg-amber-500" : "bg-emerald-500"
-                                                    }`}
+                                                className={`h-full rounded-full transition-all duration-500 ${
+                                                    cat.avgScore >= 65 ? "bg-gradient-to-r from-red-500 to-rose-400"
+                                                    : cat.avgScore >= 40 ? "bg-gradient-to-r from-amber-500 to-orange-400"
+                                                    : "bg-gradient-to-r from-emerald-500 to-teal-400"
+                                                }`}
                                                 style={{ width: `${cat.avgScore}%` }}
                                             />
                                         </div>
-                                        <span className="text-xs font-mono text-slate-500 w-8 text-right">{cat.avgScore}</span>
-                                        <span className={`text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded ${cat.riskLevel === "Critical" ? "bg-red-100 text-red-700"
-                                            : cat.riskLevel === "Elevated" ? "bg-amber-100 text-amber-700"
-                                                : "bg-emerald-100 text-emerald-700"
+                                        <span className="text-xs font-mono text-slate-500 dark:text-slate-400 w-8 text-right">{cat.avgScore}</span>
+                                        <span className={`text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full ${cat.riskLevel === "Critical" ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+                                            : cat.riskLevel === "Elevated" ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
+                                                : "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
                                             }`}>
                                             {cat.riskLevel}
                                         </span>
@@ -320,24 +352,24 @@ export default function DashboardPage() {
                     </div>
 
                     {/* Issue Type Distribution */}
-                    <div className="bg-white border border-slate-200 rounded-md p-4">
-                        <h2 className="text-xs font-bold uppercase tracking-widest text-slate-500 mb-3 border-b border-slate-100 pb-2">
+                    <div className="glass rounded-xl p-5">
+                        <h2 className="text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-4 border-b border-slate-200/50 dark:border-slate-700/50 pb-2">
                             Issue Type Distribution
                         </h2>
                         <div className="space-y-3">
                             {stats.issueTypeAnalysis.map((type) => (
-                                <div key={type.type} className="flex items-center justify-between">
+                                <div key={type.type} className="flex items-center justify-between group hover:bg-slate-50/50 dark:hover:bg-slate-800/30 rounded-lg px-2 py-2 -mx-2 transition-colors">
                                     <div>
-                                        <span className="text-sm font-medium text-slate-800">
+                                        <span className="text-sm font-medium text-slate-800 dark:text-slate-200">
                                             {ISSUE_TYPE_LABELS[type.type] || type.type}
                                         </span>
-                                        <span className="text-xs text-slate-400 ml-2">({type.count} issues)</span>
+                                        <span className="text-xs text-slate-400 dark:text-slate-500 ml-2">({type.count} issues)</span>
                                     </div>
                                     <div className="flex items-center gap-2">
-                                        <span className="text-xs text-slate-500">Avg:</span>
-                                        <span className={`text-sm font-bold ${type.avgScore >= 65 ? "text-red-700"
-                                            : type.avgScore >= 40 ? "text-amber-600"
-                                                : "text-emerald-700"
+                                        <span className="text-xs text-slate-500 dark:text-slate-400">Avg:</span>
+                                        <span className={`text-sm font-bold ${type.avgScore >= 65 ? "text-red-700 dark:text-red-400"
+                                            : type.avgScore >= 40 ? "text-amber-600 dark:text-amber-400"
+                                                : "text-emerald-700 dark:text-emerald-400"
                                             }`}>
                                             {type.avgScore}
                                         </span>
@@ -352,30 +384,30 @@ export default function DashboardPage() {
             <div className="grid gap-6 md:grid-cols-2">
                 {/* Top Priority Issues */}
                 <div>
-                    <h2 className="text-xs font-bold uppercase tracking-widest text-slate-500 mb-3 border-b border-slate-200 pb-2">
+                    <h2 className="text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-3 border-b border-slate-200 dark:border-slate-700/50 pb-2">
                         Top Priority Issues
                     </h2>
                     {criticalIssues.length === 0 ? (
                         <p className="text-sm text-slate-500">No critical issues currently active.</p>
                     ) : (
                         <div className="space-y-3">
-                            {criticalIssues.map((issue) => (
-                                <div key={issue.id} className="rounded-md border border-slate-200 bg-white p-4">
+                            {criticalIssues.map((issue, idx) => (
+                                <div key={issue.id} className="rounded-xl border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-slate-800/50 p-4 card-hover animate-fade-in-up" style={{ animationDelay: `${idx * 0.1}s` }}>
                                     <div className="flex items-start gap-3">
-                                        <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-red-100 text-red-800 text-sm font-bold shrink-0">
+                                        <span className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-gradient-to-br from-red-500 to-rose-600 text-white text-sm font-bold shrink-0 shadow-md">
                                             {issue.rank}
                                         </span>
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-start justify-between gap-2">
-                                                <h3 className="text-sm font-semibold text-slate-900 leading-tight">
+                                                <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100 leading-tight">
                                                     {issue.title}
                                                 </h3>
-                                                <span className="text-lg font-black text-red-700 shrink-0">{issue.score}</span>
+                                                <span className="text-lg font-black text-red-600 dark:text-red-400 shrink-0">{issue.score}</span>
                                             </div>
-                                            <p className="text-xs text-slate-500 mt-0.5">
+                                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                                                 {issue.region} · {issue.category} · {issue.daysPending}d pending · {issue.complaintsCount} complaints
                                             </p>
-                                            <p className="text-xs text-slate-600 mt-2 line-clamp-2 leading-relaxed">
+                                            <p className="text-xs text-slate-600 dark:text-slate-400 mt-2 line-clamp-2 leading-relaxed">
                                                 {issue.explanation}
                                             </p>
                                         </div>
@@ -451,9 +483,10 @@ export default function DashboardPage() {
             </div>
 
             {/* AI Engine Footer */}
-            <div className="text-center pt-4 border-t border-slate-200">
-                <p className="text-[10px] text-slate-400 uppercase tracking-widest">
-                    Powered by AI Priority Engine · {issues.length} issues analyzed · {Object.keys(ISSUE_TYPE_LABELS).length}-tier severity classification · 7-factor scoring model
+            <div className="text-center pt-4 border-t border-slate-200 dark:border-slate-700/50">
+                <p className="text-[10px] text-slate-400 uppercase tracking-widest flex items-center justify-center gap-2">
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-violet-50 dark:bg-violet-900/20 text-violet-500 font-semibold">✦ Powered by Gemini AI + Priority Engine</span>
+                    · {issues.length} issues analyzed · 7-factor scoring model
                 </p>
             </div>
         </div>

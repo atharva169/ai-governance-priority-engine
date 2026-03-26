@@ -4,6 +4,7 @@ import React, { useEffect, useState, useMemo, useRef, useCallback, Suspense } fr
 import { useSearchParams } from "next/navigation";
 import { useLiveStream } from "@/hooks/useLiveStream";
 import Link from "next/link";
+import AISolutionPanel from "@/components/AISolutionPanel";
 import {
     Shield,
     Activity,
@@ -152,6 +153,7 @@ function IssuesContent() {
     const [error, setError] = useState<string | null>(null);
     const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
     const [commitments, setCommitments] = useState<{ id: string; title: string; status: string; linkedGrievanceIds?: string[] }[]>([]);
+    const [aiSolutionIssue, setAiSolutionIssue] = useState<{ id: string; title: string; score: number } | null>(null);
     const searchParams = useSearchParams();
     const highlightId = searchParams.get("highlight");
     const highlightRef = useRef<HTMLTableRowElement>(null);
@@ -518,6 +520,18 @@ function IssuesContent() {
                                                                 {issue.description}
                                                             </div>
 
+                                                            {/* AI Solution Button */}
+                                                            <button
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    setAiSolutionIssue({ id: issue.id, title: issue.title, score: issue.score });
+                                                                }}
+                                                                className="mt-4 inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white text-xs font-bold uppercase tracking-wider shadow-md hover:shadow-lg transition-all duration-200"
+                                                            >
+                                                                <BrainCircuit className="h-4 w-4" />
+                                                                Get AI Solution
+                                                            </button>
+
                                                             {/* Linked Commitments Section */}
                                                             {(() => {
                                                                 const linked = getLinkedCommitments(issue.id);
@@ -570,6 +584,16 @@ function IssuesContent() {
                     </table>
                 </div>
             </div>
+
+            {/* AI Solution Panel Overlay */}
+            {aiSolutionIssue && (
+                <AISolutionPanel
+                    issueId={aiSolutionIssue.id}
+                    issueTitle={aiSolutionIssue.title}
+                    issueScore={aiSolutionIssue.score}
+                    onClose={() => setAiSolutionIssue(null)}
+                />
+            )}
         </div>
     );
 }

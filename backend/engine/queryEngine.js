@@ -1,4 +1,5 @@
 const { rankAllIssues } = require("./scoringEngine");
+const { generateAIInsight } = require("./geminiEngine");
 
 const QUERY_PATTERNS = [
     {
@@ -26,23 +27,59 @@ function matchIntent(query) {
     return null;
 }
 
-function handleQuery(query, { grievances, commitments, mediaIssues = [] }) {
+/**
+ * Build a data context summary for Gemini from the ranked issues and commitments.
+ */
+function buildDataContext(ranked, commitments) {
+    const criticalCount = ranked.filter((r) => r.label === "Critical").length;
+    const lifeSafetyCount = ranked.filter((r) => r.issueType === "life-safety").length;
+    const scores = ranked.map((r) => r.score);
+    const avgScore = scores.length > 0
+        ? Math.round((scores.reduce((a, b) => a + b, 0) / scores.length) * 10) / 10
+        : 0;
+
+    // Top categories by count
+    const catCounts = {};
+    ranked.forEach((r) => { catCounts[r.category] = (catCounts[r.category] || 0) + 1; });
+    const topCategories = Object.entries(catCounts)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5)
+        .map(([cat, count]) => `${cat} (${count})`)
+        .join(", ");
+
+    // Most affected zones
+    const zoneCounts = {};
+    ranked.forEach((r) => {
+        const zone = r.region?.split(",").pop()?.trim() || "Unknown";
+        zoneCounts[zone] = (zoneCounts[zone] || 0) + 1;
+    });
+    const mostAffectedZones = Object.entries(zoneCounts)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 3)
+        .map(([zone, count]) => `${zone} (${count} issues)`)
+        .join(", ");
+
+    const longestPending = ranked.length > 0 ? Math.max(...ranked.map((r) => r.daysPending || 0)) : 0;
+    const overdueCommitments = commitments.filter((c) => c.daysPending > 180).length;
+
+    return {
+        totalIssues: ranked.length,
+        criticalCount,
+        lifeSafetyCount,
+        avgScore,
+        topCategories,
+        mostAffectedZones,
+        longestPending,
+        commitmentCount: commitments.length,
+        overdueCommitments,
+    };
+}
+
+async function handleQuery(query, { grievances, commitments, mediaIssues = [] }) {
     const intent = matchIntent(query);
-
-    if (!intent) {
-        return {
-            intent: null,
-            error: "Unsupported query",
-            supportedQueries: [
-                "What needs urgent attention today?",
-                "Which commitments are overdue?",
-                "Which issues are likely to escalate?",
-            ],
-        };
-    }
-
     const ranked = rankAllIssues(grievances, { mediaIssues, commitments });
 
+    // Fast-path: keyword-matched intents
     if (intent === "URGENT_ATTENTION") {
         const critical = ranked
             .filter((g) => g.label === "Critical")
@@ -96,6 +133,21 @@ function handleQuery(query, { grievances, commitments, mediaIssues = [] }) {
             results: atRisk,
         };
     }
+
+    // No keyword match → use Gemini AI for free-text query
+    const dataContext = buildDataContext(ranked, commitments);
+    const aiResponse = await generateAIInsight(query, dataContext);
+
+    return {
+        intent: "AI_GENERATED",
+        aiPowered: true,
+        answer: aiResponse.answer,
+        source: aiResponse.source,
+        dataContext: {
+            totalIssues: dataContext.totalIssues,
+            criticalCount: dataContext.criticalCount,
+        },
+    };
 }
 
 module.exports = { handleQuery };

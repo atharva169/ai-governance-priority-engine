@@ -59,6 +59,9 @@ app.use("/api/audit", auditRouter);
 const sentimentRouter = require("./routes/sentiment");
 app.use("/api/sentiment", sentimentRouter);
 
+const aiSolutionsRouter = require("./routes/aiSolutions");
+app.use("/api/ai-solution", aiSolutionsRouter);
+
 const zonesRouter = require("./routes/zones");
 app.use("/api/zones", zonesRouter);
 

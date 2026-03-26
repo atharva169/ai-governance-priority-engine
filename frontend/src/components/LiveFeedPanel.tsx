@@ -52,15 +52,15 @@ export default function LiveFeedPanel({ onNewGrievance }: LiveFeedPanelProps) {
     }, [updates.length, onNewGrievance]);
 
     return (
-        <div className="rounded-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden">
+        <div className="rounded-xl border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-slate-900 overflow-hidden shadow-sm">
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/50">
                 <div className="flex items-center gap-2">
                     {/* LIVE indicator */}
                     <div className="flex items-center gap-1.5">
-                        <span className={`inline-block w-2 h-2 rounded-full ${
+                        <span className={`inline-block w-2.5 h-2.5 rounded-full ${
                             isConnected
-                                ? "bg-red-500 animate-live-pulse"
+                                ? "bg-red-500 animate-pulse-ring"
                                 : "bg-slate-400"
                         }`} />
                         <span className="text-[10px] font-bold uppercase tracking-widest text-red-600 dark:text-red-400">
@@ -136,8 +136,8 @@ export default function LiveFeedPanel({ onNewGrievance }: LiveFeedPanelProps) {
                     updates.map((item, idx) => (
                         <div
                             key={item.id}
-                            className={`px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors ${
-                                idx === 0 ? "animate-feed-slide-in" : ""
+                            className={`px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all duration-300 ${
+                                idx === 0 ? "animate-feed-slide-in bg-gradient-to-r from-red-50/50 via-white to-white dark:from-red-900/10 dark:via-slate-900 dark:to-slate-900 border-l-2 border-l-red-500" : idx < 3 ? "animate-fade-in" : ""
                             }`}
                         >
                             <div className="flex items-start gap-3">

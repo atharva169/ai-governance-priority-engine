@@ -57,16 +57,22 @@ export default function CommitmentsPage() {
 
     const getStatusBadge = (status: string) => {
         const s = status.toLowerCase();
-        if (s === "stalled" || s === "delayed" || s === "at risk") {
-            return "bg-amber-50 text-amber-700 border border-amber-200";
+        if (s === "stalled") {
+            return "bg-gradient-to-r from-red-500 to-rose-500 text-white border-none shadow-sm";
         }
-        if (s === "completed" || s === "on track" || s === "in-progress") {
-            return "bg-emerald-50 text-emerald-700 border border-emerald-200";
+        if (s === "delayed" || s === "at risk") {
+            return "bg-gradient-to-r from-amber-500 to-orange-500 text-white border-none shadow-sm";
+        }
+        if (s === "completed" || s === "on track") {
+            return "bg-gradient-to-r from-emerald-500 to-teal-500 text-white border-none shadow-sm";
+        }
+        if (s === "in-progress") {
+            return "bg-gradient-to-r from-blue-500 to-indigo-500 text-white border-none shadow-sm";
         }
         if (s === "not-started") {
-            return "bg-slate-50 text-slate-700 border border-slate-200";
+            return "bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-300 border-none";
         }
-        return "bg-slate-50 text-slate-700 border border-slate-200";
+        return "bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-300 border-none";
     };
 
     if (loading) {
@@ -99,7 +105,7 @@ export default function CommitmentsPage() {
                 </p>
             </div>
 
-            <div className="rounded-sm border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 overflow-hidden shadow-sm">
+            <div className="rounded-xl border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-slate-900 overflow-hidden shadow-sm">
                 <div className="overflow-x-auto">
                     <table className="w-full text-sm text-left align-middle">
                         <thead className="text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
@@ -128,7 +134,7 @@ export default function CommitmentsPage() {
                                                 <div className="text-xs text-slate-500 dark:text-slate-400 mt-1 uppercase tracking-wider">{commitment.department || ""}{commitment.region ? ` · ${commitment.region}` : ""}</div>
                                             </td>
                                             <td className="px-6 py-4 text-center">
-                                                <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium uppercase tracking-wide ${getStatusBadge(commitment.status)}`}>
+                                                <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wide ${getStatusBadge(commitment.status)}`}>
                                                     {commitment.status}
                                                 </span>
                                             </td>
@@ -136,7 +142,7 @@ export default function CommitmentsPage() {
                                                 <span className="font-semibold text-slate-700 dark:text-slate-300">{commitment.daysPending}</span>
                                             </td>
                                             <td className="px-6 py-4 text-center">
-                                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-sm border text-xs font-semibold uppercase ${severity.classes}`}>
+                                                <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold uppercase ${severity.classes}`}>
                                                     {severity.label}
                                                 </span>
                                             </td>

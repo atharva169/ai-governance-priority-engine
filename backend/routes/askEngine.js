@@ -2,6 +2,7 @@ const express = require("express");
 const { authorize, auditLog } = require("../auth/middleware");
 const { loadGrievances, loadCommitments, loadMediaIssues } = require("../db/services");
 const { handleQuery } = require("../engine/queryEngine");
+const liveEngine = require("../engine/liveIngestionEngine");
 
 const router = express.Router();
 
@@ -20,6 +21,16 @@ function getUserZone(user) {
 function filterByZone(grievances, zone) {
     if (!zone) return grievances;
     return grievances.filter((g) => g.region && g.region.includes(zone));
+}
+
+/**
+ * Merge static grievances with live-generated ones (deduped by ID).
+ */
+function mergeWithLive(staticGrievances) {
+    const liveGrievances = liveEngine.getLiveGrievances();
+    const existingIds = new Set(staticGrievances.map((g) => g.id));
+    const uniqueLive = liveGrievances.filter((g) => !existingIds.has(g.id));
+    return [...staticGrievances, ...uniqueLive];
 }
 
 /**
@@ -50,15 +61,16 @@ router.post(
                 return res.status(400).json({ error: "Missing or invalid query" });
             }
 
-            const allGrievances = await loadGrievances();
+            const staticGrievances = await loadGrievances();
             const allCommitments = await loadCommitments();
             const mediaIssues = await loadMediaIssues();
 
+            const allGrievances = mergeWithLive(staticGrievances);
             const zone = getUserZone(req.user);
             const grievances = filterByZone(allGrievances, zone);
             const commitments = filterCommitmentsByZone(allCommitments, allGrievances, zone);
 
-            const result = handleQuery(query, { grievances, commitments, mediaIssues });
+            const result = await handleQuery(query, { grievances, commitments, mediaIssues });
 
             result.zone = zone || "All Delhi (City-wide)";
             result.user = req.user.name;
