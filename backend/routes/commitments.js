@@ -20,7 +20,9 @@ function getUserZone(user) {
 }
 
 /**
- * Filter commitments to those linked to grievances in the user's zone.
+ * Filter commitments to those:
+ * 1. Linked to grievances in the user's zone, OR
+ * 2. Whose region matches the user's zone
  */
 function filterCommitmentsByZone(commitments, grievances, zone) {
     if (!zone) return commitments;
@@ -29,13 +31,16 @@ function filterCommitmentsByZone(commitments, grievances, zone) {
         .filter((g) => g.region && g.region.includes(zone))
         .map((g) => g.id);
 
-    return commitments.filter((c) =>
-        c.linkedGrievanceIds &&
-        c.linkedGrievanceIds.some((id) => zoneGrievanceIds.includes(id))
-    );
+    return commitments.filter((c) => {
+        // Match by region field on commitment
+        if (c.region && c.region.includes(zone)) return true;
+        // Match by linked grievance IDs
+        if (c.linkedGrievanceIds && c.linkedGrievanceIds.some((id) => zoneGrievanceIds.includes(id))) return true;
+        return false;
+    });
 }
 
-// Admin + Leader: all commitments | Officer: filtered to their zone's linked grievances
+// Admin + Leader: all commitments | Officer: filtered to their zone
 router.get(
     "/",
     authorize("admin", "officer", "leader"),

@@ -2,6 +2,8 @@
     {
         "id": "CMT-001",
         "title": "Complete Dwarka drainage overhaul by Q2 2026",
+        "department": "Public Works Department",
+        "region": "West Delhi",
         "announcedDate": "2025-08-15",
         "status": "delayed",
         "daysPending": 194,
@@ -13,6 +15,8 @@
     {
         "id": "CMT-002",
         "title": "24x7 piped water supply to East Delhi wards",
+        "department": "Delhi Jal Board",
+        "region": "East Delhi",
         "announcedDate": "2025-06-01",
         "status": "in-progress",
         "daysPending": 269,
@@ -24,6 +28,8 @@
     {
         "id": "CMT-003",
         "title": "Completion of NH-48 service lane reconstruction",
+        "department": "NHAI / PWD",
+        "region": "South Delhi",
         "announcedDate": "2025-04-10",
         "status": "stalled",
         "daysPending": 321,
@@ -35,6 +41,8 @@
     {
         "id": "CMT-004",
         "title": "Yamuna floodplain clean-up mission Phase 1",
+        "department": "Environment Department",
+        "region": "North Delhi",
         "announcedDate": "2025-10-02",
         "status": "not-started",
         "daysPending": 146,
@@ -46,6 +54,8 @@
     {
         "id": "CMT-005",
         "title": "Digitize pension disbursement across all districts",
+        "department": "Social Welfare Department",
+        "region": "East Delhi",
         "announcedDate": "2025-11-01",
         "status": "in-progress",
         "daysPending": 116,
@@ -57,6 +67,8 @@
     {
         "id": "CMT-006",
         "title": "Install crowd management systems at 5 metro stations",
+        "department": "DMRC",
+        "region": "Central Delhi",
         "announcedDate": "2025-09-15",
         "status": "in-progress",
         "daysPending": 163,
@@ -68,6 +80,8 @@
     {
         "id": "CMT-007",
         "title": "Narela sewer network rehabilitation programme",
+        "department": "Delhi Jal Board",
+        "region": "North Delhi",
         "announcedDate": "2025-07-20",
         "status": "delayed",
         "daysPending": 220,
@@ -79,6 +93,8 @@
     {
         "id": "CMT-008",
         "title": "Deploy additional DTC buses on Najafgarh route",
+        "department": "Delhi Transport Corporation",
+        "region": "West Delhi",
         "announcedDate": "2025-12-01",
         "status": "not-started",
         "daysPending": 86,
@@ -90,6 +106,8 @@
     {
         "id": "CMT-009",
         "title": "Drain desilting drive across South Delhi wards",
+        "department": "MCD South Zone",
+        "region": "South Delhi",
         "announcedDate": "2025-09-01",
         "status": "in-progress",
         "daysPending": 178,
@@ -101,6 +119,8 @@
     {
         "id": "CMT-010",
         "title": "Emergency manhole cover replacement programme",
+        "department": "NDMC / PWD",
+        "region": "Central Delhi",
         "announcedDate": "2025-11-15",
         "status": "stalled",
         "daysPending": 102,
@@ -112,6 +132,8 @@
     {
         "id": "CMT-011",
         "title": "Sangam Vihar solid waste management upgrade",
+        "department": "MCD South Zone",
+        "region": "South Delhi",
         "announcedDate": "2025-08-01",
         "status": "delayed",
         "daysPending": 208,
@@ -123,6 +145,8 @@
     {
         "id": "CMT-012",
         "title": "Mayur Vihar RO plant repair and commissioning",
+        "department": "Delhi Jal Board",
+        "region": "East Delhi",
         "announcedDate": "2025-12-15",
         "status": "in-progress",
         "daysPending": 72,

@@ -195,7 +195,7 @@ export default function LiveFeedPanel({ onNewGrievance }: LiveFeedPanelProps) {
             {/* Footer */}
             <div className="px-4 py-2 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/50">
                 <p className="text-[9px] text-slate-400 dark:text-slate-500 text-center uppercase tracking-wider">
-                    Aggregation Engine · Pattern detection from citizen complaints · Auto-scored by AI Priority Engine
+                    CPGRAMS Aggregation Layer · Pattern detection across citizen complaints · Auto-scored by AI Priority Engine
                 </p>
             </div>
         </div>

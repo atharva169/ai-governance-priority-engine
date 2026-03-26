@@ -3,6 +3,7 @@ const { authorize, auditLog } = require("../auth/middleware");
 const { loadGrievances, loadCommitments, loadMediaIssues } = require("../db/services");
 const { rankAllIssues } = require("../engine/scoringEngine");
 const { computeStatistics } = require("../engine/statisticsEngine");
+const liveEngine = require("../engine/liveIngestionEngine");
 
 const router = express.Router();
 
@@ -23,6 +24,16 @@ function filterByZone(grievances, zone) {
     return grievances.filter((g) => g.region && g.region.includes(zone));
 }
 
+/**
+ * Merge static grievances with live-generated ones (deduped by ID).
+ */
+function mergeWithLive(staticGrievances) {
+    const liveGrievances = liveEngine.getLiveGrievances();
+    const existingIds = new Set(staticGrievances.map((g) => g.id));
+    const uniqueLive = liveGrievances.filter((g) => !existingIds.has(g.id));
+    return [...staticGrievances, ...uniqueLive];
+}
+
 // GET /api/issues — Returns issues ranked by AI priority engine
 router.get(
     "/",
@@ -30,12 +41,13 @@ router.get(
     auditLog("VIEW_ISSUES"),
     async (req, res) => {
         try {
-            const grievances = await loadGrievances();
+            const staticGrievances = await loadGrievances();
             const mediaIssues = await loadMediaIssues();
             const commitments = await loadCommitments();
 
+            const allGrievances = mergeWithLive(staticGrievances);
             const zone = getUserZone(req.user);
-            const filtered = filterByZone(grievances, zone);
+            const filtered = filterByZone(allGrievances, zone);
 
             const ranked = rankAllIssues(filtered, { mediaIssues, commitments });
 
@@ -54,12 +66,13 @@ router.get(
     auditLog("VIEW_STATISTICS"),
     async (req, res) => {
         try {
-            const grievances = await loadGrievances();
+            const staticGrievances = await loadGrievances();
             const mediaIssues = await loadMediaIssues();
             const commitments = await loadCommitments();
 
+            const allGrievances = mergeWithLive(staticGrievances);
             const zone = getUserZone(req.user);
-            const filtered = filterByZone(grievances, zone);
+            const filtered = filterByZone(allGrievances, zone);
 
             const stats = computeStatistics(filtered, { mediaIssues, commitments });
 

@@ -13,47 +13,143 @@ const { v4: uuidv4 } = require("uuid");
 const { scoreIssue } = require("./scoringEngine");
 const db = require("../db/connection");
 
-// ─── Pool of 28 Delhi Regions ───
-const DELHI_REGIONS = [
-    "Dwarka, West Delhi", "Laxmi Nagar, East Delhi", "Mahipalpur, South Delhi",
-    "Connaught Place, Central Delhi", "Wazirabad, North Delhi", "Shahdara, East Delhi",
-    "Jahangirpuri, North Delhi", "Karol Bagh, Central Delhi", "Rohini, North Delhi",
-    "Janakpuri, West Delhi", "Tilak Nagar, West Delhi", "Mehrauli, South Delhi",
-    "Okhla, South Delhi", "Narela, North Delhi", "GTB Nagar, North Delhi",
-    "Patparganj, East Delhi", "ITO, Central Delhi", "Chandni Chowk, Central Delhi",
-    "Najafgarh, West Delhi", "Mayur Vihar, East Delhi", "Sangam Vihar, South Delhi",
-    "Trilokpuri, East Delhi", "Sarita Vihar, South Delhi", "Hauz Khas, South Delhi",
-    "Pitampura, North Delhi", "Saket, South Delhi", "Moti Nagar, West Delhi",
-    "Vasant Kunj, South Delhi",
-];
+// ─── Zone-Specific Grievance Templates ───
+// Each zone has unique, hyper-local grievances with realistic details.
 
-// ─── Grievance Template Pool ───
-const GRIEVANCE_TEMPLATES = [
-    { title: "Water supply disruption in {region}", category: "Water Supply", issueType: "essential-service", desc: "Multiple households report water cut-off exceeding 48 hours. Tanker dependency rising." },
-    { title: "Sewage overflow flooding homes near {region}", category: "Sanitation", issueType: "life-safety", desc: "Raw sewage entering residential areas. Health risk escalating rapidly." },
-    { title: "Gas leak reported in residential colony, {region}", category: "Public Safety", issueType: "life-safety", desc: "Strong gas odour detected. Residents self-evacuating. Emergency response delayed." },
-    { title: "Power outages affecting {region} for 6+ hours daily", category: "Power Supply", issueType: "essential-service", desc: "Transformer overloading causing extended blackouts. Heat-related health risks rising." },
-    { title: "Road cave-in near busy intersection, {region}", category: "Roads & Transport", issueType: "life-safety", desc: "A section of road has caved in near a major junction. Vehicles redirected onto narrow lanes." },
-    { title: "Illegal waste dumping on vacant plots in {region}", category: "Environment", issueType: "infrastructure", desc: "Construction debris and household waste accumulating on public land. Air quality declining." },
-    { title: "Streetlight blackout across {region} main road", category: "Municipal Services", issueType: "amenity", desc: "All streetlights non-functional on a 2km stretch. Pedestrian safety compromised after dark." },
-    { title: "Stray dog attacks near school in {region}", category: "Public Safety", issueType: "life-safety", desc: "Pack of aggressive strays has bitten 4 children this week. Parents demanding immediate action." },
-    { title: "Building cracks in government school, {region}", category: "Education Infrastructure", issueType: "life-safety", desc: "Widening structural cracks detected. Engineers recommend evacuation. 200 students affected." },
-    { title: "Blocked ambulance route in {region}", category: "Healthcare", issueType: "life-safety", desc: "Illegal encroachments causing 30-min ambulance delays. Patient died during transit." },
-    { title: "RO water plant broken in {region}", category: "Water Supply", issueType: "essential-service", desc: "Community RO plant non-functional for 30 days. Over 500 families dependent on contaminated water." },
-    { title: "Open manhole covers on main road, {region}", category: "Roads & Transport", issueType: "life-safety", desc: "Three manholes missing covers. A cyclist fell in and sustained injuries." },
-    { title: "Flooding in underpass near {region}", category: "Infrastructure", issueType: "infrastructure", desc: "Underpass floods with every rainfall. Vehicles stranded for hours. Electrocution risk from submerged cables." },
-    { title: "Dengue outbreak linked to stagnant drain in {region}", category: "Public Health", issueType: "life-safety", desc: "42 confirmed dengue cases in past 2 weeks traced to blocked drainage." },
-    { title: "Garbage collection stopped for 12 days in {region}", category: "Sanitation", issueType: "essential-service", desc: "Waste piling up in streets. Rodent infestation reported. Respiratory health complaints rising." },
-    { title: "Fire safety violation in market area, {region}", category: "Public Safety", issueType: "life-safety", desc: "Fire exits blocked by unauthorized construction. Fire department flagged critical risk." },
-    { title: "Overloaded transformer explosion risk in {region}", category: "Power Supply", issueType: "life-safety", desc: "Distribution transformer running at 150% capacity. BSES flagged imminent failure risk." },
-    { title: "Pension payment delay — 4 months pending in {region}", category: "Social Welfare", issueType: "essential-service", desc: "Senior citizens in the ward have not received pension for 4 consecutive months." },
-    { title: "Broken footpath causing pedestrian falls in {region}", category: "Roads & Transport", issueType: "infrastructure", desc: "Damaged pavement tiles and missing railing on a major walking route. 3 falls reported." },
-    { title: "CCTV cameras non-functional in market, {region}", category: "Public Safety", issueType: "amenity", desc: "14 of 20 surveillance cameras offline. Crime incidents spiking in the area." },
-    { title: "School bus route hazard due to construction in {region}", category: "Roads & Transport", issueType: "infrastructure", desc: "Ongoing road construction without proper diversions. School buses forced onto unsafe detours." },
-    { title: "Contaminated borewell water in {region}", category: "Water Supply", issueType: "life-safety", desc: "Lab tests confirm heavy metal contamination in community borewells. Gastroenteritis cases rising." },
-    { title: "Unhygienic food stalls near hospital, {region}", category: "Public Health", issueType: "amenity", desc: "Unlicensed food vendors operating without hygiene standards near government hospital." },
-    { title: "Noise pollution from industrial units in {region}", category: "Environment", issueType: "amenity", desc: "Residential area surrounded by factories operating beyond permitted noise levels." },
-];
+const ZONE_TEMPLATES = {
+    "North Delhi": [
+        { title: "Broken sewer line flooding 40+ homes in Narela Sector A7", category: "Sanitation", issueType: "life-safety", desc: "A ruptured main sewer pipe has displaced families for 5 days. Raw sewage is entering ground-floor rooms. MCD repair crew dispatched but unable to locate the rupture point.", severity: "high" },
+        { title: "Illegal dumping of industrial waste near Wazirabad waterworks", category: "Environment", issueType: "life-safety", desc: "Chemical drums found abandoned near Wazirabad water treatment inlet. DJB has flagged potential contamination of drinking water supply to 3 lakh households.", severity: "high" },
+        { title: "Fire exit blocked by encroachments in Rohini Sector 11 market", category: "Public Safety", issueType: "life-safety", desc: "Illegal building extensions have narrowed the fire access lane to less than 2 metres. Fire tenders cannot pass. Fire department issued critical risk notice after inspection.", severity: "high" },
+        { title: "Garbage dump overflow near GTB Nagar metro station", category: "Sanitation", issueType: "life-safety", desc: "Municipal dhalao not cleared for 12 days. Waste spilling onto main road attracting rodents. Nearby shopkeepers forced to close due to unbearable stench.", severity: "medium" },
+        { title: "Contaminated borewell water in Jahangirpuri Block C-D", category: "Water Supply", issueType: "life-safety", desc: "Lab tests confirm coliform bacteria in community borewells. Three children hospitalised with gastroenteritis this week. DJB tanker supply remains erratic.", severity: "high" },
+        { title: "Stalled construction of Narela community health centre", category: "Healthcare Infrastructure", issueType: "essential-service", desc: "The health centre sanctioned 14 months ago stuck at 30% completion. Nearest hospital is 8 km away. Pregnant women in the area lack emergency access.", severity: "medium" },
+        { title: "Broken streetlights on Pitampura Ring Road stretch", category: "Municipal Services", issueType: "amenity", desc: "18 streetlights non-functional on the 1.5 km stretch between Pitampura metro and Wazirpur depot. Two chain-snatching incidents reported this week.", severity: "low" },
+        { title: "Waterlogging in Burari underpass after brief rainfall", category: "Infrastructure", issueType: "infrastructure", desc: "Burari underpass accumulates 3 feet of water after even mild rain. Vehicles stranded for hours. Drainage pumps installed last year are non-functional.", severity: "medium" },
+        { title: "Pension payments delayed 4 months for Alipur ward seniors", category: "Social Welfare", issueType: "essential-service", desc: "89 senior citizens in Alipur ward have not received old-age pension since November. Helpline remains unresponsive despite 200+ complaint calls.", severity: "medium" },
+        { title: "Stray cattle blocking NH-44 service road near Singhu border", category: "Roads & Transport", issueType: "infrastructure", desc: "Abandoned dairy cattle roaming on the service road causing daily accidents. Three two-wheeler collisions this month. MCD animal control unresponsive.", severity: "medium" },
+        { title: "Overflowing Najafgarh drain near Bawana industrial area", category: "Environment", issueType: "life-safety", desc: "Untreated effluent from 40+ factories entering the drain. Residents in adjacent colony report skin rashes and respiratory issues. DPCC notice ignored.", severity: "high" },
+        { title: "CCTV cameras non-functional across Model Town market", category: "Public Safety", issueType: "amenity", desc: "11 out of 16 surveillance cameras offline for 6 weeks. Two robbery incidents in the market last month. RWA demanding immediate repair.", severity: "low" },
+    ],
+
+    "South Delhi": [
+        { title: "Dengue outbreak linked to stagnant drain in Mehrauli village", category: "Public Health", issueType: "life-safety", desc: "42 confirmed dengue cases in past 2 weeks traced to a blocked storm drain near the heritage area. Vector control team has not conducted fogging.", severity: "high" },
+        { title: "Sewage overflow flooding Okhla Phase 2 residential blocks", category: "Sanitation", issueType: "life-safety", desc: "Raw sewage entering ground-floor homes in Block F. Residents displaced to relatives' houses. MCD says contractor dispute delaying repair.", severity: "high" },
+        { title: "Irregular garbage collection in Sangam Vihar colony", category: "Sanitation", issueType: "essential-service", desc: "Collection reduced to once weekly instead of daily. Open waste piles on every street corner. Stray dogs and rats multiplying. Respiratory complaints rising.", severity: "medium" },
+        { title: "Encroachment blocking cycle track on BRT corridor, Chirag Delhi", category: "Roads & Transport", issueType: "infrastructure", desc: "Street vendors and parked vehicles have completely blocked the designated cycle track. Cyclists forced onto main road. Two accidents this week.", severity: "medium" },
+        { title: "Mosquito breeding in clogged drain near Saket metro station", category: "Public Health", issueType: "life-safety", desc: "Standing water in the open drain behind Saket mall has become a breeding ground. 15 malaria cases reported in surrounding residential blocks.", severity: "high" },
+        { title: "Broken footpath tiles causing falls on Hauz Khas Village road", category: "Roads & Transport", issueType: "infrastructure", desc: "Uneven and shattered pavement tiles on the main pedestrian road. An elderly woman fractured her hip last Tuesday. Tourist footfall at risk.", severity: "medium" },
+        { title: "Community park in Vasant Kunj D-block vandalised", category: "Municipal Services", issueType: "amenity", desc: "Playground equipment dismantled by scrap thieves. Benches uprooted. Walking track damaged. 800+ families depend on this park for recreation.", severity: "low" },
+        { title: "RO water plant shutdown at Sangam Vihar community centre", category: "Water Supply", issueType: "essential-service", desc: "The RO plant has been non-functional for 60 days. Over 1,200 families now depend on untreated borewell water. Maintenance contractor absconding.", severity: "medium" },
+        { title: "Noise pollution from illegal banquet hall in Greater Kailash", category: "Environment", issueType: "amenity", desc: "Residents report nightly DJ music exceeding 80dB until 2 AM. DPCC orders ignored. Multiple written complaints to SDM office unanswered.", severity: "low" },
+        { title: "Pothole cluster on Mehrauli-Badarpur road near Sarita Vihar", category: "Roads & Transport", issueType: "infrastructure", desc: "17 deep potholes on a 500-metre stretch. A tempo overturned last week injuring 3 passengers. PWD has not responded to ward councillor's letter.", severity: "medium" },
+        { title: "Crumbling boundary wall of government school in Malviya Nagar", category: "Education Infrastructure", issueType: "life-safety", desc: "Cracks widening daily in the compound wall. 350 students attend the school. Principal has written 4 letters to the education department. No response.", severity: "high" },
+        { title: "Stray dog menace near Ambedkar Nagar primary school", category: "Public Safety", issueType: "life-safety", desc: "Pack of aggressive strays attacked 2 children this month near the school gate. Parents keeping children home. MCD animal control team yet to visit.", severity: "high" },
+    ],
+
+    "East Delhi": [
+        { title: "Daily 6-hour power cuts across Trilokpuri blocks 25-32", category: "Power Supply", issueType: "essential-service", desc: "Transformer overloading causing prolonged blackouts. Summer temperatures rising. Three heat-stroke cases among elderly residents reported this week.", severity: "medium" },
+        { title: "Collapsed boundary wall of government school in Patparganj", category: "Education Infrastructure", issueType: "life-safety", desc: "The compound wall collapsed during heavy rain last week. School shut since then. 400 students affected. Structural assessment pending for 10 days.", severity: "high" },
+        { title: "Damaged footpath and missing railing on Vikas Marg flyover", category: "Roads & Transport", issueType: "infrastructure", desc: "Pedestrian footpath on the west side is broken with missing railing sections. Two pedestrian falls reported. NDMC has not acknowledged the complaint.", severity: "medium" },
+        { title: "RO water plant broken at Mayur Vihar Phase 3 community centre", category: "Water Supply", issueType: "essential-service", desc: "Community RO plant non-functional for 45 days. 800+ families now buying packaged water. Maintenance contractor unreachable. DJB says not their jurisdiction.", severity: "medium" },
+        { title: "Delayed pension disbursement for Shahdara district seniors", category: "Social Welfare", issueType: "essential-service", desc: "Over 1,200 beneficiaries have not received old-age pension for three consecutive months. District office helpline perpetually engaged.", severity: "medium" },
+        { title: "Irregular water supply in Laxmi Nagar — 45 minutes per day", category: "Water Supply", issueType: "essential-service", desc: "Multiple households report water supply limited to 45 minutes daily, down from 3 hours. Tanker dependency tripled. DJB blames low pressure in the trunk main.", severity: "medium" },
+        { title: "Open drain overflowing near Preet Vihar market", category: "Sanitation", issueType: "life-safety", desc: "Uncovered municipal drain has been overflowing for 9 days. Raw sewage on shop frontages. 6 shops forced to close. MCD says desilting crew unavailable.", severity: "high" },
+        { title: "Gas leak near LPG godown in Pandav Nagar industrial area", category: "Public Safety", issueType: "life-safety", desc: "Workers in adjacent units report strong gas odour since morning. Fire brigade alerted but not yet arrived. 200+ workers evacuated as precaution.", severity: "high" },
+        { title: "Pothole-ridden road near Anand Vihar ISBT causing accidents", category: "Roads & Transport", issueType: "infrastructure", desc: "12 deep potholes on approach road to the bus terminal. An auto-rickshaw overturned yesterday injuring 4 passengers. Heavy vehicle traffic worsens damage daily.", severity: "medium" },
+        { title: "Broken traffic signal at Vikas Marg-Laxmi Nagar crossing", category: "Roads & Transport", issueType: "infrastructure", desc: "Signal non-functional for 2 weeks at one of East Delhi's busiest intersections. Traffic jams exceeding 45 minutes during peak hours. 3 minor collisions reported.", severity: "medium" },
+        { title: "Mosquito breeding in Yamuna bank colony, Geeta Colony", category: "Public Health", issueType: "life-safety", desc: "Stagnant rainwater pools in the low-lying colony attracting Aedes mosquitoes. 18 dengue cases in 10 days. No fogging or larvicide spraying done despite requests.", severity: "high" },
+        { title: "Illegal parking blocking ambulance access in Krishna Nagar", category: "Healthcare", issueType: "life-safety", desc: "Cars parked on both sides of the lane leading to the community clinic. Ambulance took 35 minutes to reach a cardiac emergency last Thursday.", severity: "high" },
+    ],
+
+    "West Delhi": [
+        { title: "Persistent waterlogging in Dwarka Sector 12 main road", category: "Infrastructure", issueType: "infrastructure", desc: "Every rainfall event floods the road for 6+ hours. Drainage infrastructure is 15 years old and undersized for current population. Rs 80 crore overhaul promised but stalled.", severity: "medium" },
+        { title: "DTC bus route cancellation stranding 5,000 Najafgarh commuters", category: "Public Transport", issueType: "essential-service", desc: "Three bus routes abruptly cancelled due to fleet shortage. Daily commuters left with no public transport. Auto-rickshaw fares have doubled in the area.", severity: "medium" },
+        { title: "Flooding in Janakpuri C-Block underpass — electrocution risk", category: "Infrastructure", issueType: "life-safety", desc: "The underpass floods with every rain. Submerged electrical cables pose electrocution hazard. Two motorcyclists were electrocuted last monsoon season.", severity: "high" },
+        { title: "Stray dog attacks near Dwarka Sector 7 primary school", category: "Public Safety", issueType: "life-safety", desc: "Pack of stray dogs attacked 3 schoolchildren in the past month. Parents keeping children home. School attendance dropped 40%. MCD animal control unresponsive.", severity: "high" },
+        { title: "Gas pipeline leak near residential colony in Dwarka Sector 23", category: "Public Safety", issueType: "life-safety", desc: "Strong gas odour reported near Sector 23 market. IGL notified 48 hours ago but repair team has not arrived. 50+ families have self-evacuated.", severity: "high" },
+        { title: "Broken playground equipment injuring children in Tilak Nagar park", category: "Municipal Services", issueType: "amenity", desc: "Rusted and broken swings have caused injuries to two children this month. Parents demand immediate removal. MCD maintenance request pending 6 weeks.", severity: "low" },
+        { title: "Overloaded transformer sparking in Moti Nagar residential block", category: "Power Supply", issueType: "life-safety", desc: "Distribution transformer running at 160% capacity. Visible sparking at night. BSES says replacement scheduled but no timeline. 200 flats at fire risk.", severity: "high" },
+        { title: "Waterlogging at Palam flyover disrupting airport traffic", category: "Infrastructure", issueType: "infrastructure", desc: "Airport-bound traffic regularly blocked for 2+ hours during rain. PWD pump installed last year is defunct. Airlines report rise in passenger missed-flight complaints.", severity: "medium" },
+        { title: "Contaminated tap water in Uttam Nagar west blocks", category: "Water Supply", issueType: "life-safety", desc: "Brownish water with sediment from municipal taps since last week. Lab tests pending. 6 children in the area hospitalised with diarrhoea. DJB says flushing scheduled.", severity: "high" },
+        { title: "Encroachment on footpath near Janakpuri West metro station", category: "Roads & Transport", issueType: "infrastructure", desc: "Vendors occupying entire footpath forcing pedestrians onto busy road. Visually impaired resident fell into open drain last week. DMRC and MCD blame each other.", severity: "medium" },
+        { title: "Broken sewer cover on Najafgarh main road", category: "Roads & Transport", issueType: "life-safety", desc: "Manhole cover missing on a busy stretch. A cyclist fell in at night sustaining fractures. Temporary barricade removed by morning traffic. Repeated complaints ignored.", severity: "high" },
+        { title: "School bus route hazard due to Dwarka Expressway construction", category: "Roads & Transport", issueType: "infrastructure", desc: "Ongoing expressway work without proper diversions forcing school buses onto unsafe kutcha detours. Parents demand alternate route but contractor refuses.", severity: "medium" },
+    ],
+
+    "Central Delhi": [
+        { title: "Ambulance delay of 40 minutes in densely packed Chandni Chowk", category: "Healthcare", issueType: "life-safety", desc: "Narrow lanes and illegal encroachments causing severe ambulance delays. A cardiac patient died waiting for an ambulance last week. Family demanding FIR against encroachers.", severity: "high" },
+        { title: "Structural cracks in government school building, Karol Bagh", category: "Education Infrastructure", issueType: "life-safety", desc: "Wide cracks appearing in 3 classrooms of the Boys Senior Secondary School. Engineers flagged as 'unsafe for occupation'. 120 students withdrawn by parents.", severity: "high" },
+        { title: "Open manholes on Ring Road near ITO junction", category: "Roads & Transport", issueType: "life-safety", desc: "Four manholes with missing covers on a high-speed stretch. A two-wheeler rider fell into one last week sustaining serious spinal injuries. NDMC unresponsive.", severity: "high" },
+        { title: "Late-night construction noise violating DPCC limits near CP", category: "Environment", issueType: "amenity", desc: "Continuous jackhammer noise from 11 PM to 5 AM near Connaught Place inner circle. 200+ residents' sleep disrupted daily. No action despite written DPCC complaint.", severity: "low" },
+        { title: "Overcrowding at Rajiv Chowk metro — platform crush risk", category: "Public Transport", issueType: "life-safety", desc: "Peak-hour overcrowding has caused 3 near-stampede situations this month. Platform management grossly inadequate. DMRC claims staffing shortfall.", severity: "high" },
+        { title: "Sewage leak contaminating Jama Masjid area food street", category: "Public Health", issueType: "life-safety", desc: "Leaking sewer pipe under the famous food street. Raw sewage seeping into shop basements. Health inspector reports gastro cases spike but MCD denies any leak.", severity: "high" },
+        { title: "Traffic signal malfunction at Minto Bridge causing gridlock", category: "Roads & Transport", issueType: "infrastructure", desc: "Signal stuck on red for all directions for 3 days. Traffic police manually managing but causing 30-minute delays. PMU says replacement part awaited from Pune.", severity: "medium" },
+        { title: "Pension arrears of 5 months for widows in Daryaganj ward", category: "Social Welfare", issueType: "essential-service", desc: "67 widow pension beneficiaries have not received payment since October. Many are sole earners. District women welfare officer says file pending at State level.", severity: "medium" },
+        { title: "Broken lift in multi-storey CGHS flats, Connaught Place", category: "Municipal Services", issueType: "amenity", desc: "Only working lift in 8-storey block broken for 3 weeks. 15 elderly and 4 wheelchair-bound residents unable to leave their flats. RWA exhausted its repair fund.", severity: "low" },
+        { title: "Illegal hawker encroachment near Patel Chowk metro exit", category: "Roads & Transport", issueType: "infrastructure", desc: "50+ hawkers blocking the metro exit path and pedestrian crossing. Commuters forced to walk on the road. NDMC anti-encroachment drive announced but not executed.", severity: "medium" },
+        { title: "Fire hydrant non-functional in Paharganj hotel district", category: "Public Safety", issueType: "life-safety", desc: "32 fire hydrants in the congested hotel area found non-functional during surprise inspection. Last fire killed 17 people. DJB says water pressure insufficient.", severity: "high" },
+        { title: "Contaminated food stalls near RML Hospital, New Delhi", category: "Public Health", issueType: "amenity", desc: "Unlicensed vendors using recycled cooking oil near the hospital gate. Two food poisoning cases traced to the stalls. FSSAI notice issued but no follow-up.", severity: "low" },
+    ],
+};
+
+// Flatten all regions into a lookup
+const ALL_REGIONS = Object.keys(ZONE_TEMPLATES);
+const ZONE_REGION_MAP = {
+    "North Delhi": [
+        "Narela, North Delhi", "Wazirabad, North Delhi", "Rohini Sector 11, North Delhi",
+        "GTB Nagar, North Delhi", "Jahangirpuri, North Delhi", "Pitampura, North Delhi",
+        "Burari, North Delhi", "Alipur, North Delhi", "Bawana, North Delhi", "Model Town, North Delhi",
+    ],
+    "South Delhi": [
+        "Mehrauli, South Delhi", "Okhla Phase 2, South Delhi", "Sangam Vihar, South Delhi",
+        "Chirag Delhi, South Delhi", "Saket, South Delhi", "Hauz Khas, South Delhi",
+        "Vasant Kunj, South Delhi", "Greater Kailash, South Delhi", "Sarita Vihar, South Delhi",
+        "Malviya Nagar, South Delhi", "Ambedkar Nagar, South Delhi",
+    ],
+    "East Delhi": [
+        "Trilokpuri, East Delhi", "Patparganj, East Delhi", "Mayur Vihar Phase 3, East Delhi",
+        "Shahdara, East Delhi", "Laxmi Nagar, East Delhi", "Preet Vihar, East Delhi",
+        "Pandav Nagar, East Delhi", "Anand Vihar, East Delhi", "Geeta Colony, East Delhi",
+        "Krishna Nagar, East Delhi",
+    ],
+    "West Delhi": [
+        "Dwarka Sector 12, West Delhi", "Najafgarh, West Delhi", "Janakpuri, West Delhi",
+        "Dwarka Sector 7, West Delhi", "Dwarka Sector 23, West Delhi", "Tilak Nagar, West Delhi",
+        "Moti Nagar, West Delhi", "Palam, West Delhi", "Uttam Nagar, West Delhi",
+    ],
+    "Central Delhi": [
+        "Chandni Chowk, Central Delhi", "Karol Bagh, Central Delhi", "ITO, Central Delhi",
+        "Connaught Place, Central Delhi", "Rajiv Chowk, Central Delhi", "Jama Masjid, Central Delhi",
+        "Minto Bridge, Central Delhi", "Daryaganj, Central Delhi", "Paharganj, Central Delhi",
+        "Patel Chowk, Central Delhi",
+    ],
+};
+
+// Severity presets for correlated, realistic metrics
+const SEVERITY_PRESETS = {
+    high: {
+        complaintsCount: () => 180 + Math.floor(Math.random() * 320),     // 180-500
+        sentimentSeverity: () => 4 + Math.floor(Math.random() * 2),       // 4-5
+        daysPending: () => 3 + Math.floor(Math.random() * 43),            // 3-45  (urgent issues noticed quickly)
+        publicVisibility: () => 3 + Math.floor(Math.random() * 3),        // 3-5
+        escalationRisk: () => 3 + Math.floor(Math.random() * 3),          // 3-5
+    },
+    medium: {
+        complaintsCount: () => 80 + Math.floor(Math.random() * 250),      // 80-330
+        sentimentSeverity: () => 2 + Math.floor(Math.random() * 3),       // 2-4
+        daysPending: () => 10 + Math.floor(Math.random() * 81),           // 10-90  (building pressure over time)
+        publicVisibility: () => 2 + Math.floor(Math.random() * 3),        // 2-4
+        escalationRisk: () => 2 + Math.floor(Math.random() * 3),          // 2-4
+    },
+    low: {
+        complaintsCount: () => 8 + Math.floor(Math.random() * 55),        // 8-63
+        sentimentSeverity: () => 1 + Math.floor(Math.random() * 2),       // 1-2
+        daysPending: () => 7 + Math.floor(Math.random() * 54),            // 7-60  (slow-burn nuisances)
+        publicVisibility: () => 1 + Math.floor(Math.random() * 2),        // 1-2
+        escalationRisk: () => 1 + Math.floor(Math.random() * 2),          // 1-2
+    },
+};
 
 // ─── State ───
 const listeners = new Map(); // res → { zone, userId }
@@ -62,6 +158,7 @@ let emissionTimer = null;
 let cleanupTimer = null;
 let totalIngested = 312; // Start with a realistic base count
 let isRunning = false;
+let lastUsedTemplateIndex = {}; // Track per-zone to avoid repeats
 
 const BUFFER_MAX = 5000;
 const BASE_INTERVAL = 30000; // 30s with 1 listener
@@ -70,27 +167,40 @@ const FAST_INTERVAL = 15000; // 15s with 2+ listeners
 // ─── Core Functions ───
 
 /**
- * Generate a single realistic grievance with random metrics.
+ * Generate a single realistic, zone-specific grievance.
  */
 function generateGrievance() {
-    const template = GRIEVANCE_TEMPLATES[Math.floor(Math.random() * GRIEVANCE_TEMPLATES.length)];
-    const region = DELHI_REGIONS[Math.floor(Math.random() * DELHI_REGIONS.length)];
+    // Pick a random zone
+    const zone = ALL_REGIONS[Math.floor(Math.random() * ALL_REGIONS.length)];
+    const templates = ZONE_TEMPLATES[zone];
+    const regions = ZONE_REGION_MAP[zone];
+
+    // Pick a template, avoiding immediate repeats within the same zone
+    let templateIdx;
+    do {
+        templateIdx = Math.floor(Math.random() * templates.length);
+    } while (templates.length > 2 && templateIdx === lastUsedTemplateIndex[zone]);
+    lastUsedTemplateIndex[zone] = templateIdx;
+
+    const template = templates[templateIdx];
+    const region = regions[Math.floor(Math.random() * regions.length)];
     const timestamp = Date.now();
     const shortId = uuidv4().split("-")[0];
+    const preset = SEVERITY_PRESETS[template.severity] || SEVERITY_PRESETS.medium;
 
     const grievance = {
         id: `GRV-LIVE-${timestamp}-${shortId}`,
-        title: template.title.replace("{region}", region.split(",")[0]),
+        title: template.title,
         description: template.desc,
         category: template.category,
         issueType: template.issueType,
         region: region,
         status: "open",
-        complaintsCount: 50 + Math.floor(Math.random() * 400),
-        sentimentSeverity: 1 + Math.floor(Math.random() * 5),
-        daysPending: 1 + Math.floor(Math.random() * 155),
-        publicVisibility: 1 + Math.floor(Math.random() * 5),
-        escalationRisk: 1 + Math.floor(Math.random() * 5),
+        complaintsCount: preset.complaintsCount(),
+        sentimentSeverity: preset.sentimentSeverity(),
+        daysPending: preset.daysPending(),
+        publicVisibility: preset.publicVisibility(),
+        escalationRisk: preset.escalationRisk(),
         source: "live-portal",
         ingestedAt: new Date().toISOString(),
     };
@@ -308,6 +418,29 @@ function getRecentGrievances(limit = 5) {
     }));
 }
 
+/**
+ * Get ALL live-generated grievances in the same shape as grievances.json
+ * entries, so they can be merged into the issues API response.
+ */
+function getLiveGrievances() {
+    return buffer.map((g) => ({
+        id: g.id,
+        title: g.title,
+        description: g.description,
+        category: g.category,
+        issueType: g.issueType,
+        region: g.region,
+        status: g.status,
+        complaintsCount: g.complaintsCount,
+        sentimentSeverity: g.sentimentSeverity,
+        daysPending: g.daysPending,
+        publicVisibility: g.publicVisibility,
+        escalationRisk: g.escalationRisk,
+        source: g.source, // "live-portal"
+        ingestedAt: g.ingestedAt,
+    }));
+}
+
 module.exports = {
     startStream,
     stopStream,
@@ -315,5 +448,6 @@ module.exports = {
     removeListener,
     getStats,
     getRecentGrievances,
+    getLiveGrievances,
     get totalIngested() { return totalIngested; },
 };

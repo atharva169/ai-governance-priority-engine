@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useEffect, useState, useMemo, useRef, Suspense } from "react";
+import React, { useEffect, useState, useMemo, useRef, useCallback, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
+import { useLiveStream } from "@/hooks/useLiveStream";
 import Link from "next/link";
 import {
     Shield,
@@ -77,6 +78,7 @@ interface Issue {
     daysPending: number;
     complaintsCount: number;
     factorBreakdown: Record<string, FactorBreakdown>;
+    source?: string;
 }
 
 interface Statistics {
@@ -153,41 +155,53 @@ function IssuesContent() {
     const searchParams = useSearchParams();
     const highlightId = searchParams.get("highlight");
     const highlightRef = useRef<HTMLTableRowElement>(null);
+    const lastRefetchRef = useRef<number>(0);
+    const { updates: liveUpdates } = useLiveStream();
+
+    const fetchData = useCallback(async () => {
+        try {
+            const token = localStorage.getItem("token") || "";
+            const headers = { Authorization: `Bearer ${token}` };
+
+            const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "";
+            const [issuesRes, statsRes, commitmentsRes] = await Promise.all([
+                fetch(`${API_BASE_URL}/api/issues`, { headers }),
+                fetch(`${API_BASE_URL}/api/issues/statistics`, { headers }),
+                fetch(`${API_BASE_URL}/api/commitments`, { headers }),
+            ]);
+
+            if (!issuesRes.ok) throw new Error("Failed to fetch issues.");
+            if (!commitmentsRes.ok) throw new Error("Failed to fetch commitments.");
+
+            const issuesData = await issuesRes.json();
+            const statsData = statsRes.ok ? await statsRes.json() : null;
+            const commitmentsData = await commitmentsRes.json();
+
+            const parsedIssues = Array.isArray(issuesData?.issues) ? issuesData.issues : [];
+            setIssues(parsedIssues);
+            if (statsData) setStats(statsData);
+            setCommitments(Array.isArray(commitmentsData?.commitments) ? commitmentsData.commitments : []);
+        } catch (err) {
+            console.error("Fetch error:", err);
+            setError("Unable to retrieve issue data. Data service may be unavailable.");
+        } finally {
+            setLoading(false);
+        }
+    }, []);
 
     useEffect(() => {
-        async function fetchData() {
-            try {
-                const token = localStorage.getItem("token") || "";
-                const headers = { Authorization: `Bearer ${token}` };
-
-                const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "";
-                const [issuesRes, statsRes, commitmentsRes] = await Promise.all([
-                    fetch(`${API_BASE_URL}/api/issues`, { headers }),
-                    fetch(`${API_BASE_URL}/api/issues/statistics`, { headers }),
-                    fetch(`${API_BASE_URL}/api/commitments`, { headers }),
-                ]);
-
-                if (!issuesRes.ok) throw new Error("Failed to fetch issues.");
-                if (!commitmentsRes.ok) throw new Error("Failed to fetch commitments.");
-
-                const issuesData = await issuesRes.json();
-                const statsData = statsRes.ok ? await statsRes.json() : null;
-                const commitmentsData = await commitmentsRes.json();
-
-                const parsedIssues = Array.isArray(issuesData?.issues) ? issuesData.issues : [];
-                setIssues(parsedIssues);
-                if (statsData) setStats(statsData);
-                setCommitments(Array.isArray(commitmentsData?.commitments) ? commitmentsData.commitments : []);
-            } catch (err) {
-                console.error("Fetch error:", err);
-                setError("Unable to retrieve issue data. Data service may be unavailable.");
-            } finally {
-                setLoading(false);
-            }
-        }
-
         fetchData();
-    }, []);
+    }, [fetchData]);
+
+    // Auto-refetch when live feed pushes new grievances (max once per 30s)
+    useEffect(() => {
+        if (liveUpdates.length === 0) return;
+        const now = Date.now();
+        if (now - lastRefetchRef.current > 30000) {
+            lastRefetchRef.current = now;
+            fetchData();
+        }
+    }, [liveUpdates.length, fetchData]);
 
     // Auto-expand and scroll to highlighted issue from query param
     useEffect(() => {
@@ -390,7 +404,14 @@ function IssuesContent() {
 
                                             {/* Issue details */}
                                             <td className="px-4 py-3.5">
-                                                <div className="font-medium text-slate-900 dark:text-slate-100 leading-tight">{issue.title}</div>
+                                                <div className="flex items-center gap-2">
+                                                    <span className="font-medium text-slate-900 dark:text-slate-100 leading-tight">{issue.title}</span>
+                                                    {issue.source === "live-portal" && (
+                                                        <span className="shrink-0 text-[9px] font-bold uppercase tracking-wider text-red-500 bg-red-50 dark:bg-red-900/20 px-1.5 py-0.5 rounded animate-pulse">
+                                                            LIVE
+                                                        </span>
+                                                    )}
+                                                </div>
                                                 <div className="text-xs text-slate-500 mt-0.5">{issue.region}</div>
                                             </td>
 

@@ -7,8 +7,9 @@ import { ExternalLink } from "lucide-react";
 interface Commitment {
     id: string;
     title: string;
-    department: string;
-    status: "Delayed" | "On Track" | "Completed" | "At Risk";
+    department?: string;
+    region?: string;
+    status: string;
     daysPending: number;
     grievanceIds?: string[];
     linkedGrievanceIds?: string[];
@@ -55,16 +56,17 @@ export default function CommitmentsPage() {
     };
 
     const getStatusBadge = (status: string) => {
-        switch (status) {
-            case "Delayed":
-            case "At Risk":
-                return "bg-amber-50 text-amber-700 border border-amber-200";
-            case "Completed":
-            case "On Track":
-                return "bg-emerald-50 text-emerald-700 border border-emerald-200";
-            default:
-                return "bg-slate-50 text-slate-700 border border-slate-200";
+        const s = status.toLowerCase();
+        if (s === "stalled" || s === "delayed" || s === "at risk") {
+            return "bg-amber-50 text-amber-700 border border-amber-200";
         }
+        if (s === "completed" || s === "on track" || s === "in-progress") {
+            return "bg-emerald-50 text-emerald-700 border border-emerald-200";
+        }
+        if (s === "not-started") {
+            return "bg-slate-50 text-slate-700 border border-slate-200";
+        }
+        return "bg-slate-50 text-slate-700 border border-slate-200";
     };
 
     if (loading) {
@@ -123,7 +125,7 @@ export default function CommitmentsPage() {
                                         <tr key={commitment.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
                                             <td className="px-6 py-4">
                                                 <div className="font-medium text-slate-900 dark:text-slate-100">{commitment.title}</div>
-                                                <div className="text-xs text-slate-500 dark:text-slate-400 mt-1 uppercase tracking-wider">{commitment.department}</div>
+                                                <div className="text-xs text-slate-500 dark:text-slate-400 mt-1 uppercase tracking-wider">{commitment.department || ""}{commitment.region ? ` · ${commitment.region}` : ""}</div>
                                             </td>
                                             <td className="px-6 py-4 text-center">
                                                 <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium uppercase tracking-wide ${getStatusBadge(commitment.status)}`}>
