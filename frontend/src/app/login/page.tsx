@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Eye, EyeOff, Shield, MapPin, Loader2, Zap, ChevronDown } from "lucide-react";
+import HeroSequence from "@/components/HeroSequence";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "";
 
@@ -37,7 +38,7 @@ export default function LoginPage() {
     const [loadingStates, setLoadingStates] = useState(true);
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState("");
-    const [showCredentials, setShowCredentials] = useState(false);
+    const [showCredentials, setShowCredentials] = useState(true);
     const [demoLoading, setDemoLoading] = useState(false);
 
     // Fetch states on mount
@@ -157,9 +158,10 @@ export default function LoginPage() {
     };
 
     return (
-        <div className="flex min-h-screen bg-slate-50">
+        <HeroSequence>
+        <div className="flex flex-col lg:flex-row w-full min-h-full bg-slate-50 relative">
             {/* Left branding panel */}
-            <div className="hidden lg:flex lg:w-[480px] xl:w-[560px] bg-slate-900 flex-col justify-between p-12 relative overflow-hidden">
+            <div className="hidden lg:flex lg:w-[480px] xl:w-[560px] bg-slate-900 flex-col justify-between p-12 relative overflow-hidden lg:h-screen lg:sticky lg:top-0">
                 {/* Subtle background pattern */}
                 <div className="absolute inset-0 opacity-[0.03]" style={{
                     backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
@@ -203,8 +205,8 @@ export default function LoginPage() {
             </div>
 
             {/* Right login form panel */}
-            <div className="flex-1 flex items-center justify-center p-6 sm:p-12">
-                <div className="w-full max-w-md">
+            <div className="flex-1 flex flex-col items-center p-6 sm:p-12">
+                <div className="w-full max-w-md my-auto pt-8 pb-16">
                     {/* Mobile-only header */}
                     <div className="lg:hidden mb-8 text-center">
                         <div className="flex items-center justify-center gap-2 mb-3">
@@ -514,5 +516,6 @@ export default function LoginPage() {
                 </div>
             </div>
         </div>
+        </HeroSequence>
     );
 }
