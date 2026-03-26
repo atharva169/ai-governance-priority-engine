@@ -357,34 +357,52 @@ class AuditLogService {
 // ─── Data Loader (DB-first, JSON-fallback) ───
 
 /**
- * Load grievances from DB if available, else from JSON.
+ * Load grievances from DB if available and has data, else from JSON.
  */
 async function loadGrievances() {
     if (db.isAvailable()) {
-        const service = new GrievanceService();
-        return service.getAll();
+        try {
+            const service = new GrievanceService();
+            const results = await service.getAll();
+            if (results && results.length > 0) return results;
+            // DB table exists but is empty — fall back to JSON
+        } catch (err) {
+            console.warn("DB grievances query failed, using JSON fallback:", err.message);
+        }
     }
     return loadJSON("grievances.json");
 }
 
 /**
- * Load commitments with linked grievance IDs from DB or JSON.
+ * Load commitments with linked grievance IDs from DB (if has data) or JSON.
  */
 async function loadCommitments() {
     if (db.isAvailable()) {
-        const service = new CommitmentService();
-        return service.getAllWithLinks();
+        try {
+            const service = new CommitmentService();
+            const results = await service.getAllWithLinks();
+            if (results && results.length > 0) return results;
+            // DB table exists but is empty — fall back to JSON
+        } catch (err) {
+            console.warn("DB commitments query failed, using JSON fallback:", err.message);
+        }
     }
     return loadJSON("commitments.json");
 }
 
 /**
- * Load media issues from DB or JSON.
+ * Load media issues from DB (if has data) or JSON.
  */
 async function loadMediaIssues() {
     if (db.isAvailable()) {
-        const service = new MediaIssueService();
-        return service.getAll();
+        try {
+            const service = new MediaIssueService();
+            const results = await service.getAll();
+            if (results && results.length > 0) return results;
+            // DB table exists but is empty — fall back to JSON
+        } catch (err) {
+            console.warn("DB media issues query failed, using JSON fallback:", err.message);
+        }
     }
     return loadJSON("media-issues.json");
 }
