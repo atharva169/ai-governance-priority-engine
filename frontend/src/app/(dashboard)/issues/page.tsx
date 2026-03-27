@@ -204,7 +204,7 @@ const IssueRow = React.memo(({ issue, isExpanded, isHighlighted, innerRef, onTog
                                                 <div className="flex items-center gap-2">
                                                     <span className="font-medium text-slate-900 dark:text-slate-100 leading-tight">{issue.title}</span>
                                                     {issue.source === "live-portal" && (
-                                                        <span className="shrink-0 text-[9px] font-bold uppercase tracking-wider text-red-500 bg-red-50 dark:bg-red-900/20 px-1.5 py-0.5 rounded animate-pulse">
+                                                        <span className="shrink-0 text-[9px] font-bold uppercase tracking-wider text-red-500 bg-red-50 dark:bg-red-900/20 px-1.5 py-0.5 rounded">
                                                             LIVE
                                                         </span>
                                                     )}
@@ -270,7 +270,7 @@ const IssueRow = React.memo(({ issue, isExpanded, isHighlighted, innerRef, onTog
                                                                                     </span>
                                                                                     <div className="flex-1 h-4 bg-slate-200 rounded-sm overflow-hidden transform-gpu">
                                                                                         <div
-                                                                                            className={`h-full rounded-sm transition-all duration-300 ${val.weighted >= 12 ? "bg-red-500" : val.weighted >= 6 ? "bg-amber-500" : "bg-slate-400"
+                                                                                            className={`h-full rounded-sm ${val.weighted >= 12 ? "bg-red-500" : val.weighted >= 6 ? "bg-amber-500" : "bg-slate-400"
                                                                                                 }`}
                                                                                             style={{ width: `${barWidth}%` }}
                                                                                         />
@@ -468,21 +468,25 @@ function IssuesContent() {
         }
     }, [highlightId, issues]);
 
-    // Find commitments linked to a specific issue
-    const getLinkedCommitments = (issueId: string) => {
+    // Find commitments linked to a specific issue — memoized to prevent re-renders
+    const getLinkedCommitments = useCallback((issueId: string) => {
         return commitments.filter(
             (c) => c.linkedGrievanceIds && c.linkedGrievanceIds.includes(issueId)
         );
-    };
+    }, [commitments]);
 
-    const toggleRow = (id: string) => {
+    const toggleRow = useCallback((id: string) => {
         setExpandedRows((prev) => {
             const next = new Set(prev);
             if (next.has(id)) next.delete(id);
             else next.add(id);
             return next;
         });
-    };
+    }, []);
+
+    const handleGetSolution = useCallback((id: string, title: string, score: number) => {
+        setAiSolutionIssue({ id, title, score });
+    }, []);
 
 
 
@@ -611,7 +615,7 @@ function IssuesContent() {
                                         isHighlighted={issue.id === highlightId}
                                         innerRef={issue.id === highlightId ? highlightRef : undefined}
                                         onToggle={toggleRow}
-                                        onGetSolution={(id, title, score) => setAiSolutionIssue({ id, title, score })}
+                                        onGetSolution={handleGetSolution}
                                         getLinkedCommitments={getLinkedCommitments}
                                     />
                                 ))

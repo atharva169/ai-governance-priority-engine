@@ -330,7 +330,7 @@ export default function DashboardPage() {
                                     <div className="flex items-center gap-3">
                                         <div className="w-24 h-2.5 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
                                             <div
-                                                className={`h-full rounded-full transition-all duration-500 ${
+                                                className={`h-full rounded-full ${
                                                     cat.avgScore >= 65 ? "bg-gradient-to-r from-red-500 to-rose-400"
                                                     : cat.avgScore >= 40 ? "bg-gradient-to-r from-amber-500 to-orange-400"
                                                     : "bg-gradient-to-r from-emerald-500 to-teal-400"
