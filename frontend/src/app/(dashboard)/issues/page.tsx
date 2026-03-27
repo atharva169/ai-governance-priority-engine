@@ -160,8 +160,9 @@ function IssuesContent() {
     const lastRefetchRef = useRef<number>(0);
     const { updates: liveUpdates } = useLiveStream();
 
-    const fetchData = useCallback(async () => {
+    const fetchData = useCallback(async (isBackground = false) => {
         try {
+            if (!isBackground) setLoading(true);
             const token = localStorage.getItem("token") || "";
             const headers = { Authorization: `Bearer ${token}` };
 
@@ -185,14 +186,15 @@ function IssuesContent() {
             setCommitments(Array.isArray(commitmentsData?.commitments) ? commitmentsData.commitments : []);
         } catch (err) {
             console.error("Fetch error:", err);
-            setError("Unable to retrieve issue data. Data service may be unavailable.");
+            // Only show hard errors if not a background update
+            if (!isBackground) setError("Unable to retrieve issue data. Data service may be unavailable.");
         } finally {
-            setLoading(false);
+            if (!isBackground) setLoading(false);
         }
     }, []);
 
     useEffect(() => {
-        fetchData();
+        fetchData(false);
     }, [fetchData]);
 
     // Auto-refetch when live feed pushes new grievances (max once per 30s)
@@ -201,7 +203,7 @@ function IssuesContent() {
         const now = Date.now();
         if (now - lastRefetchRef.current > 30000) {
             lastRefetchRef.current = now;
-            fetchData();
+            fetchData(true); // background refetch without throwing UI spinner
         }
     }, [liveUpdates.length, fetchData]);
 
@@ -456,35 +458,40 @@ function IssuesContent() {
                                                                 Factor Breakdown
                                                             </h4>
                                                             <div className="space-y-2">
-                                                                {Object.entries(issue.factorBreakdown)
-                                                                    .sort(([, a], [, b]) => b.weighted - a.weighted)
-                                                                    .map(([key, val]) => {
-                                                                        const maxWeighted = Math.max(
-                                                                            ...Object.values(issue.factorBreakdown).map((v) => v.weighted)
-                                                                        );
-                                                                        const barWidth = maxWeighted > 0 ? (val.weighted / maxWeighted) * 100 : 0;
+                                                                {(() => {
+                                                                    // Calculate max weight ONCE for the whole group instead of N times inside the loop
+                                                                    const maxWeighted = Math.max(
+                                                                        0,
+                                                                        ...Object.values(issue.factorBreakdown).map((v) => v.weighted)
+                                                                    );
+                                                                    
+                                                                    return Object.entries(issue.factorBreakdown)
+                                                                        .sort(([, a], [, b]) => b.weighted - a.weighted)
+                                                                        .map(([key, val]) => {
+                                                                            const barWidth = maxWeighted > 0 ? (val.weighted / maxWeighted) * 100 : 0;
 
-                                                                        return (
-                                                                            <div key={key} className="flex items-center gap-3">
-                                                                                <span className="text-xs text-slate-600 w-32 shrink-0 truncate">
-                                                                                    {FACTOR_LABELS[key] || key}
-                                                                                </span>
-                                                                                <div className="flex-1 h-4 bg-slate-200 rounded-sm overflow-hidden">
-                                                                                    <div
-                                                                                        className={`h-full rounded-sm ${val.weighted >= 12 ? "bg-red-500" : val.weighted >= 6 ? "bg-amber-500" : "bg-slate-400"
-                                                                                            }`}
-                                                                                        style={{ width: `${barWidth}%` }}
-                                                                                    />
+                                                                            return (
+                                                                                <div key={key} className="flex items-center gap-3">
+                                                                                    <span className="text-xs text-slate-600 w-32 shrink-0 truncate">
+                                                                                        {FACTOR_LABELS[key] || key}
+                                                                                    </span>
+                                                                                    <div className="flex-1 h-4 bg-slate-200 rounded-sm overflow-hidden transform-gpu">
+                                                                                        <div
+                                                                                            className={`h-full rounded-sm transition-all duration-300 ${val.weighted >= 12 ? "bg-red-500" : val.weighted >= 6 ? "bg-amber-500" : "bg-slate-400"
+                                                                                                }`}
+                                                                                            style={{ width: `${barWidth}%` }}
+                                                                                        />
+                                                                                    </div>
+                                                                                    <span className="text-xs font-mono text-slate-500 w-14 text-right">
+                                                                                        {val.weighted.toFixed(1)}
+                                                                                    </span>
+                                                                                    <span className="text-[10px] text-slate-400 w-12 text-right">
+                                                                                        {val.contribution}
+                                                                                    </span>
                                                                                 </div>
-                                                                                <span className="text-xs font-mono text-slate-500 w-14 text-right">
-                                                                                    {val.weighted.toFixed(1)}
-                                                                                </span>
-                                                                                <span className="text-[10px] text-slate-400 w-12 text-right">
-                                                                                    {val.contribution}
-                                                                                </span>
-                                                                            </div>
-                                                                        );
-                                                                    })}
+                                                                            );
+                                                                        });
+                                                                })()}
                                                             </div>
                                                             <div className="mt-3 flex items-center gap-4 text-xs text-slate-500">
                                                                 <span>Total: <strong className={getScoreColor(issue.score)}>{issue.score}/100</strong></span>

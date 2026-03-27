@@ -124,11 +124,13 @@ export default function AISolutionPanel({ issueId, issueTitle, issueScore, onClo
                                 <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">Analyzing Issue...</p>
                                 <p className="text-xs text-slate-500 mt-1">AI Engine is generating a comprehensive solution</p>
                             </div>
-                            {/* Shimmer lines */}
-                            <div className="w-full space-y-3 mt-4">
-                                {[...Array(6)].map((_, i) => (
-                                    <div key={i} className="animate-shimmer rounded-lg" style={{ animationDelay: `${i * 0.15}s` }}>
-                                        <div className="h-16 bg-gradient-to-r from-slate-100 via-slate-200 to-slate-100 dark:from-slate-800 dark:via-slate-700 dark:to-slate-800 rounded-lg" />
+                            {/* Simplified shimmer lines */}
+                            <div className="w-full space-y-3 mt-4 px-4 opacity-70">
+                                {[...Array(3)].map((_, i) => (
+                                    <div key={i} className="animate-pulse flex flex-col gap-2">
+                                        <div className="h-6 w-1/3 bg-slate-200 dark:bg-slate-700 rounded-md" />
+                                        <div className="h-4 w-full bg-slate-100 dark:bg-slate-800 rounded-md" />
+                                        <div className="h-4 w-5/6 bg-slate-100 dark:bg-slate-800 rounded-md" />
                                     </div>
                                 ))}
                             </div>
