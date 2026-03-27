@@ -99,7 +99,7 @@ export default function AISolutionPanel({ issueId, issueTitle, issueScore, onClo
                                 </div>
                                 {solution?.source && (
                                     <span className="text-[10px] font-mono text-slate-500 uppercase">
-                                        {solution.source === "gemini" ? "⚡ Live AI" : solution.source === "cache" ? "📦 Cached" : "🔄 Fallback"}
+                                        {solution.source === "ai" ? "⚡ Live AI" : solution.source === "cache" ? "📦 Cached" : "🔄 Fallback"}
                                     </span>
                                 )}
                             </div>
@@ -122,7 +122,7 @@ export default function AISolutionPanel({ issueId, issueTitle, issueScore, onClo
                             </div>
                             <div className="text-center">
                                 <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">Analyzing Issue...</p>
-                                <p className="text-xs text-slate-500 mt-1">Gemini AI is generating a comprehensive solution</p>
+                                <p className="text-xs text-slate-500 mt-1">AI Engine is generating a comprehensive solution</p>
                             </div>
                             {/* Shimmer lines */}
                             <div className="w-full space-y-3 mt-4">
@@ -185,7 +185,7 @@ export default function AISolutionPanel({ issueId, issueTitle, issueScore, onClo
                             <div className="flex items-center justify-center gap-2 pt-4 pb-2">
                                 <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-violet-50 to-purple-50 dark:from-violet-900/20 dark:to-purple-900/20 border border-violet-200 dark:border-violet-700/50">
                                     <Sparkles className="h-3 w-3 text-violet-500" />
-                                    <span className="text-[11px] font-semibold text-violet-600 dark:text-violet-400">Powered by Gemini AI</span>
+                                    <span className="text-[11px] font-semibold text-violet-600 dark:text-violet-400">Powered by AI Engine</span>
                                 </div>
                             </div>
                         </div>

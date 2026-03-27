@@ -1,26 +1,77 @@
 /**
- * Gemini AI Engine — Generative AI Integration with Triple-Layer Fallback
+ * AI Engine — Generative AI Integration via OpenRouter with Triple-Layer Fallback
  *
  * Architecture:
- *   Layer 1: Live Gemini 2.0 Flash API call
+ *   Layer 1: Live AI API call via OpenRouter (multiple model fallback)
  *   Layer 2: LRU in-memory cache (last 50 responses, 1hr TTL)
  *   Layer 3: Pre-generated category-based fallback responses
  *
  * This ensures the demo NEVER fails, even if the API key expires or rate-limits.
  */
 
-const { GoogleGenerativeAI } = require("@google/generative-ai");
-
 // ─── Configuration ───
-const API_KEY = process.env.GEMINI_API_KEY || "";
-const MODEL_NAME = "gemini-2.0-flash";
+const API_KEY = process.env.OPENROUTER_API_KEY || "";
+const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
 
-let genAI = null;
-let model = null;
+// Model priority list — tries each in order until one works
+const MODEL_PRIORITY = [
+    "nvidia/nemotron-nano-9b-v2:free",
+    "google/gemma-3-12b-it:free",
+    "google/gemma-3-27b-it:free",
+    "meta-llama/llama-3.3-70b-instruct:free",
+    "qwen/qwen3-4b:free",
+    "mistralai/mistral-small-3.1-24b-instruct:free",
+];
 
-if (API_KEY) {
-    genAI = new GoogleGenerativeAI(API_KEY);
-    model = genAI.getGenerativeModel({ model: MODEL_NAME });
+/**
+ * Call OpenRouter API with automatic model fallback.
+ * Tries each model in MODEL_PRIORITY until one succeeds.
+ */
+async function callOpenRouter(systemPrompt, userPrompt) {
+    if (!API_KEY) return null;
+
+    for (const model of MODEL_PRIORITY) {
+        try {
+            const response = await fetch(OPENROUTER_URL, {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${API_KEY}`,
+                    "Content-Type": "application/json",
+                    "HTTP-Referer": "https://ai-governance-priority-engine.vercel.app",
+                    "X-Title": "AI Governance Priority Engine",
+                },
+                body: JSON.stringify({
+                    model,
+                    messages: [
+                        { role: "system", content: systemPrompt },
+                        { role: "user", content: userPrompt },
+                    ],
+                    max_tokens: 2048,
+                    temperature: 0.7,
+                }),
+            });
+
+            if (!response.ok) {
+                const errBody = await response.json().catch(() => ({}));
+                const errMsg = errBody.error?.message || response.statusText;
+                console.warn(`[AIEngine] ${model} failed (${response.status}): ${errMsg}`);
+                continue; // Try next model
+            }
+
+            const data = await response.json();
+            const text = data.choices?.[0]?.message?.content;
+
+            if (text) {
+                console.log(`[AIEngine] Success with model: ${model}`);
+                return { text, model };
+            }
+        } catch (err) {
+            console.warn(`[AIEngine] ${model} error: ${err.message}`);
+            continue; // Try next model
+        }
+    }
+
+    return null; // All models failed
 }
 
 // ─── Layer 2: LRU Cache ───
@@ -30,7 +81,6 @@ const responseCache = new Map();
 
 function getCacheKey(type, input) {
     const str = typeof input === "string" ? input : JSON.stringify(input);
-    // Simple hash
     let hash = 0;
     for (let i = 0; i < str.length; i++) {
         hash = ((hash << 5) - hash + str.charCodeAt(i)) | 0;
@@ -50,7 +100,6 @@ function getCachedResponse(key) {
 
 function setCachedResponse(key, data) {
     if (responseCache.size >= CACHE_MAX) {
-        // Remove oldest entry
         const firstKey = responseCache.keys().next().value;
         responseCache.delete(firstKey);
     }
@@ -128,9 +177,6 @@ const FALLBACK_QUERY_RESPONSES = {
 
 /**
  * Generate an AI-powered solution for a governance issue.
- *
- * @param {Object} issue - The issue data from the scoring engine
- * @returns {Promise<Object>} Structured solution object
  */
 async function generateIssueSolution(issue) {
     const cacheKey = getCacheKey("solution", issue.id + issue.title);
@@ -141,20 +187,20 @@ async function generateIssueSolution(issue) {
         return { ...cached, source: "cache" };
     }
 
-    // Layer 1: Try Gemini API
-    if (model) {
-        try {
-            const prompt = buildSolutionPrompt(issue);
-            const result = await model.generateContent(prompt);
-            const text = result.response.text();
-            const parsed = parseSolutionResponse(text);
+    // Layer 1: Try OpenRouter API
+    const systemPrompt = "You are a senior governance advisor for the Government of India's AI Priority & Accountability Engine. Provide structured, actionable policy analysis.";
+    const userPrompt = buildSolutionPrompt(issue);
+    const result = await callOpenRouter(systemPrompt, userPrompt);
 
+    if (result) {
+        try {
+            const parsed = parseSolutionResponse(result.text);
             if (parsed) {
                 setCachedResponse(cacheKey, parsed);
-                return { ...parsed, source: "gemini" };
+                return { ...parsed, source: "ai", model: result.model };
             }
         } catch (err) {
-            console.warn("[GeminiEngine] API call failed, falling back:", err.message);
+            console.warn("[AIEngine] Parse error after successful API call:", err.message);
         }
     }
 
@@ -168,10 +214,6 @@ async function generateIssueSolution(issue) {
 
 /**
  * Generate an AI-powered response to a free-text query.
- *
- * @param {string} query - The user's natural language query
- * @param {Object} dataContext - Summary data for context
- * @returns {Promise<Object>} AI response object
  */
 async function generateAIInsight(query, dataContext) {
     const cacheKey = getCacheKey("query", query);
@@ -182,24 +224,19 @@ async function generateAIInsight(query, dataContext) {
         return { ...cached, source: "cache" };
     }
 
-    // Layer 1: Try Gemini API
-    if (model) {
-        try {
-            const prompt = buildQueryPrompt(query, dataContext);
-            const result = await model.generateContent(prompt);
-            const text = result.response.text();
+    // Layer 1: Try OpenRouter API
+    const systemPrompt = "You are the AI intelligence engine for the Government of India's Priority & Accountability Platform. Answer questions based on the data context provided. Be clear, authoritative, and data-driven.";
+    const userPrompt = buildQueryPrompt(query, dataContext);
+    const result = await callOpenRouter(systemPrompt, userPrompt);
 
-            const response = {
-                answer: text,
-                query: query,
-                generatedAt: new Date().toISOString(),
-            };
-
-            setCachedResponse(cacheKey, response);
-            return { ...response, source: "gemini" };
-        } catch (err) {
-            console.warn("[GeminiEngine] Query API call failed, falling back:", err.message);
-        }
+    if (result) {
+        const response = {
+            answer: result.text,
+            query: query,
+            generatedAt: new Date().toISOString(),
+        };
+        setCachedResponse(cacheKey, response);
+        return { ...response, source: "ai", model: result.model };
     }
 
     // Layer 3: Keyword-based fallback
@@ -225,9 +262,7 @@ async function generateAIInsight(query, dataContext) {
 // ─── Prompt Builders ───
 
 function buildSolutionPrompt(issue) {
-    return `You are a senior governance advisor for the Government of India's AI Priority & Accountability Engine.
-
-Analyze this governance issue and provide a structured solution:
+    return `Analyze this governance issue and provide a structured solution:
 
 ISSUE DETAILS:
 - Title: ${issue.title}
@@ -267,9 +302,7 @@ Be specific, actionable, and reference real Indian government structures.`;
 }
 
 function buildQueryPrompt(query, dataContext) {
-    return `You are the AI intelligence engine for the Government of India's Priority & Accountability Platform.
-
-A senior government official is asking you a question. Answer based on the data context provided.
+    return `A senior government official is asking you a question. Answer based on the data context provided.
 
 DATA CONTEXT:
 - Total Active Issues: ${dataContext.totalIssues || "N/A"}
@@ -307,7 +340,6 @@ function parseSolutionResponse(text) {
             if (match) {
                 let content = match[1].trim();
                 if (key === "proposedSolution") {
-                    // Parse numbered list
                     sections[key] = content
                         .split(/\n/)
                         .map(line => line.replace(/^\d+\.\s*/, "").trim())
@@ -318,12 +350,10 @@ function parseSolutionResponse(text) {
             }
         }
 
-        // Ensure we have at least root cause and solution
         if (sections.rootCauseAnalysis && sections.proposedSolution) {
             return sections;
         }
 
-        // If parsing failed, try to return raw text as analysis
         return {
             rootCauseAnalysis: text.substring(0, 300),
             proposedSolution: ["Review the detailed analysis above and implement recommended actions"],
@@ -333,7 +363,7 @@ function parseSolutionResponse(text) {
             stakeholders: "Relevant line departments and district administration",
         };
     } catch (err) {
-        console.warn("[GeminiEngine] Parse error:", err.message);
+        console.warn("[AIEngine] Parse error:", err.message);
         return null;
     }
 }

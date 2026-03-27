@@ -485,7 +485,7 @@ export default function DashboardPage() {
             {/* AI Engine Footer */}
             <div className="text-center pt-4 border-t border-slate-200 dark:border-slate-700/50">
                 <p className="text-[10px] text-slate-400 uppercase tracking-widest flex items-center justify-center gap-2">
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-violet-50 dark:bg-violet-900/20 text-violet-500 font-semibold">✦ Powered by Gemini AI + Priority Engine</span>
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-violet-50 dark:bg-violet-900/20 text-violet-500 font-semibold">✦ Powered by AI + Priority Engine</span>
                     · {issues.length} issues analyzed · 7-factor scoring model
                 </p>
             </div>

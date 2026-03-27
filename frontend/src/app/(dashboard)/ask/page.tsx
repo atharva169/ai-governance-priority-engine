@@ -85,7 +85,7 @@ export default function AskPage() {
             setMessages(prev => [...prev, {
                 role: "ai",
                 content: aiContent,
-                source: data.source || (data.aiPowered ? "gemini" : "engine"),
+                source: data.source || (data.aiPowered ? "ai" : "engine"),
                 dataContext: data.dataContext,
                 timestamp: new Date(),
             }]);
@@ -126,7 +126,7 @@ export default function AskPage() {
                         <span className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">AI Intelligence</span>
                         {msg.source && (
                             <span className="text-[10px] px-2 py-0.5 rounded-full bg-violet-100 dark:bg-violet-900/30 text-violet-600 dark:text-violet-400 font-semibold">
-                                {msg.source === "gemini" ? "⚡ Gemini AI" : msg.source === "cache" ? "📦 Cached" : "🔍 Engine"}
+                                {msg.source === "ai" ? "⚡ Live AI" : msg.source === "cache" ? "📦 Cached" : "🔍 Engine"}
                             </span>
                         )}
                     </div>
@@ -165,7 +165,7 @@ export default function AskPage() {
                         </h1>
                         <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
                             <Sparkles className="h-3 w-3 text-violet-500" />
-                            Powered by Gemini AI — Ask anything about governance data
+                            Powered by AI Engine — Ask anything about governance data
                         </p>
                     </div>
                 </div>
