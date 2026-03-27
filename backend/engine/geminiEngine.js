@@ -14,11 +14,12 @@ const API_KEY = process.env.OPENROUTER_API_KEY || "";
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
 
 // Model priority list — tries each in order until one works
+// The Gemma 3 models (12b and 4b) are extremely fast and have a rate limit of 15 req/min + 1,500 req/day
 const MODEL_PRIORITY = [
-    "nvidia/nemotron-nano-9b-v2:free",
     "google/gemma-3-12b-it:free",
-    "google/gemma-3-27b-it:free",
-    "meta-llama/llama-3.3-70b-instruct:free",
+    "google/gemma-3-4b-it:free",
+    "liquid/lfm-2.5-1.2b-instruct:free",
+    "nvidia/nemotron-nano-9b-v2:free",
     "qwen/qwen3-4b:free",
     "mistralai/mistral-small-3.1-24b-instruct:free",
 ];
