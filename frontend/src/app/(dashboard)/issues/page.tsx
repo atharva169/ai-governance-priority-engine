@@ -146,6 +146,252 @@ const ISSUE_TYPE_COLORS: Record<string, string> = {
     amenity: "bg-slate-100 text-slate-600 border-slate-200",
 };
 
+const getLabelStyle = (label: string) => {
+    switch (label) {
+        case "Critical": return "bg-red-100 text-red-800";
+        case "Attention Required": return "bg-amber-100 text-amber-800";
+        case "Stable": return "bg-emerald-100 text-emerald-800";
+        default: return "bg-slate-100 text-slate-800";
+    }
+};
+
+const getScoreColor = (score: number) => {
+    if (score >= 65) return "text-red-700";
+    if (score >= 40) return "text-amber-600";
+    return "text-emerald-700";
+};
+
+const getHealthColor = (score: number) => {
+    if (score >= 70) return "text-emerald-700";
+    if (score >= 45) return "text-amber-600";
+    return "text-red-700";
+};
+
+
+const IssueRow = React.memo(({ issue, isExpanded, isHighlighted, innerRef, onToggle, onGetSolution, getLinkedCommitments }: { issue: Issue; isExpanded: boolean; isHighlighted: boolean; innerRef?: React.Ref<HTMLTableRowElement>; onToggle: (id: string) => void; onGetSolution: (id: string, title: string, score: number) => void; getLinkedCommitments: (id: string) => { id: string; title: string; status: string; linkedGrievanceIds?: string[] }[]; }) => {
+    return (
+        <React.Fragment>
+            <tr
+                                            ref={innerRef}
+                                            className={`hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer ${isExpanded ? "bg-slate-50 dark:bg-slate-800/50" : ""
+                                                } ${isHighlighted ? "ring-2 ring-blue-400 ring-inset" : ""}`}
+                                            onClick={() => onToggle(issue.id)}
+                                        >
+                                            {/* Rank */}
+                                            <td className="px-4 py-3.5 text-center">
+                                                <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold ${issue.rank <= 3
+                                                    ? "bg-red-100 text-red-800"
+                                                    : issue.rank <= 7
+                                                        ? "bg-amber-100 text-amber-700"
+                                                        : "bg-slate-100 text-slate-600"
+                                                    }`}>
+                                                    {issue.rank}
+                                                </span>
+                                            </td>
+
+                                            {/* Score */}
+                                            <td className="px-4 py-3.5 text-center">
+                                                <span className={`text-lg font-bold ${getScoreColor(issue.score)}`}>
+                                                    {issue.score}
+                                                </span>
+                                                <span className="text-xs text-slate-400 block">
+                                                    p{issue.percentile}
+                                                </span>
+                                            </td>
+
+                                            {/* Issue details */}
+                                            <td className="px-4 py-3.5">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="font-medium text-slate-900 dark:text-slate-100 leading-tight">{issue.title}</span>
+                                                    {issue.source === "live-portal" && (
+                                                        <span className="shrink-0 text-[9px] font-bold uppercase tracking-wider text-red-500 bg-red-50 dark:bg-red-900/20 px-1.5 py-0.5 rounded animate-pulse">
+                                                            LIVE
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                <div className="text-xs text-slate-500 mt-0.5">{issue.region}</div>
+                                            </td>
+
+                                            {/* Issue Type */}
+                                            <td className="px-4 py-3.5">
+                                                <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wide border ${ISSUE_TYPE_COLORS[issue.issueType] || "bg-slate-100 text-slate-600"
+                                                    }`}>
+                                                    {ISSUE_TYPE_LABELS[issue.issueType] || issue.issueType}
+                                                </span>
+                                            </td>
+
+                                            {/* Priority label */}
+                                            <td className="px-4 py-3.5">
+                                                <span className={`inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium uppercase ${getLabelStyle(issue.label)}`}>
+                                                    {issue.label}
+                                                </span>
+                                            </td>
+
+                                            {/* Days pending */}
+                                            <td className="px-4 py-3.5 text-center">
+                                                <span className={`font-semibold ${issue.daysPending >= 90 ? "text-red-700" : issue.daysPending >= 30 ? "text-amber-600" : "text-slate-600"}`}>
+                                                    {issue.daysPending}d
+                                                </span>
+                                            </td>
+
+                                            {/* Complaints */}
+                                            <td className="px-4 py-3.5 text-center text-slate-700 dark:text-slate-300 font-medium">
+                                                {issue.complaintsCount}
+                                            </td>
+                                        </tr>
+
+                                        {/* Expanded Detail Panel */}
+                                        {isExpanded && (
+                                            <tr className="bg-slate-50/70 dark:bg-slate-800/30">
+                                                <td colSpan={7} className="px-6 py-5">
+                                                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                                        {/* Left: Factor Breakdown */}
+                                                        <div>
+                                                            <h4 className="text-xs font-bold uppercase tracking-widest text-slate-500 mb-3">
+                                                                Factor Breakdown
+                                                            </h4>
+                                                            <div className="space-y-2">
+                                                                {(() => {
+                                                                    // Calculate max weight ONCE for the whole group instead of N times inside the loop
+                                                                    const maxWeighted = Math.max(
+                                                                        0,
+                                                                        ...Object.values(issue.factorBreakdown).map((v) => v.weighted)
+                                                                    );
+                                                                    
+                                                                    return Object.entries(issue.factorBreakdown)
+                                                                        .sort(([, a], [, b]) => b.weighted - a.weighted)
+                                                                        .map(([key, val]) => {
+                                                                            const barWidth = maxWeighted > 0 ? (val.weighted / maxWeighted) * 100 : 0;
+
+                                                                            return (
+                                                                                <div key={key} className="flex items-center gap-3">
+                                                                                    <span className="text-xs text-slate-600 w-32 shrink-0 truncate">
+                                                                                        {FACTOR_LABELS[key] || key}
+                                                                                    </span>
+                                                                                    <div className="flex-1 h-4 bg-slate-200 rounded-sm overflow-hidden transform-gpu">
+                                                                                        <div
+                                                                                            className={`h-full rounded-sm transition-all duration-300 ${val.weighted >= 12 ? "bg-red-500" : val.weighted >= 6 ? "bg-amber-500" : "bg-slate-400"
+                                                                                                }`}
+                                                                                            style={{ width: `${barWidth}%` }}
+                                                                                        />
+                                                                                    </div>
+                                                                                    <span className="text-xs font-mono text-slate-500 w-14 text-right">
+                                                                                        {val.weighted.toFixed(1)}
+                                                                                    </span>
+                                                                                    <span className="text-[10px] text-slate-400 w-12 text-right">
+                                                                                        {val.contribution}
+                                                                                    </span>
+                                                                                </div>
+                                                                            );
+                                                                        });
+                                                                })()}
+                                                            </div>
+                                                            <div className="mt-3 flex items-center gap-4 text-xs text-slate-500">
+                                                                <span>Total: <strong className={getScoreColor(issue.score)}>{issue.score}/100</strong></span>
+                                                                <span>Percentile: <strong>p{issue.percentile}</strong></span>
+                                                                <span>Z-Score: <strong>{issue.zScore}</strong></span>
+                                                                <span>Confidence: <strong className="capitalize">{issue.confidence}</strong></span>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Right: AI Reasoning */}
+                                                        <div>
+                                                            <h4 className="text-xs font-bold uppercase tracking-widest text-slate-500 mb-3">
+                                                                AI Reasoning
+                                                            </h4>
+                                                            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md p-4">
+                                                                <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
+                                                                    {issue.aiReasoning}
+                                                                </p>
+                                                            </div>
+
+                                                            {issue.comparisonToNext && (
+                                                                <div className="mt-3">
+                                                                    <h5 className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1.5">
+                                                                        Comparison to Next Rank
+                                                                    </h5>
+                                                                    <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md p-3">
+                                                                        {issue.comparisonToNext}
+                                                                    </p>
+                                                                </div>
+                                                            )}
+
+                                                            <div className="mt-3 text-xs text-slate-500 italic">
+                                                                {issue.description}
+                                                            </div>
+
+                                                            {/* AI Solution Button */}
+                                                            <button
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    onGetSolution(issue.id, issue.title, issue.score);
+                                                                }}
+                                                                className="mt-4 inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white text-xs font-bold uppercase tracking-wider shadow-md hover:shadow-lg transition-all duration-200"
+                                                            >
+                                                                <BrainCircuit className="h-4 w-4" />
+                                                                Get AI Solution
+                                                            </button>
+
+                                                            {/* Linked Commitments Section */}
+                                                            {(() => {
+                                                                const linked = getLinkedCommitments(issue.id);
+                                                                if (linked.length === 0) return null;
+                                                                return (
+                                                                    <div className="mt-4 border-t border-slate-200 pt-3">
+                                                                        <h5 className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2 flex items-center gap-1.5">
+                                                                            <CheckSquare className="h-3 w-3" />
+                                                                            Linked Commitments
+                                                                        </h5>
+                                                                        <div className="space-y-2">
+                                                                            {linked.map((cmt) => {
+                                                                                const statusColor =
+                                                                                    cmt.status === "Completed" || cmt.status === "On Track"
+                                                                                        ? "bg-emerald-100 text-emerald-700 border-emerald-200"
+                                                                                        : cmt.status === "Delayed" || cmt.status === "At Risk"
+                                                                                            ? "bg-amber-100 text-amber-700 border-amber-200"
+                                                                                            : "bg-slate-100 text-slate-600 border-slate-200";
+                                                                                return (
+                                                                                    <Link
+                                                                                        key={cmt.id}
+                                                                                        href="/commitments"
+                                                                                        className="flex items-center justify-between bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md px-3 py-2 hover:border-blue-300 hover:bg-blue-50/30 dark:hover:bg-slate-800 transition-colors group"
+                                                                                    >
+                                                                                        <span className="text-xs text-slate-700 dark:text-slate-300 font-medium group-hover:text-blue-700 transition-colors">
+                                                                                            {cmt.title}
+                                                                                        </span>
+                                                                                        <div className="flex items-center gap-2">
+                                                                                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase border ${statusColor}`}>
+                                                                                                {cmt.status}
+                                                                                            </span>
+                                                                                            <ExternalLink className="h-3 w-3 text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                                                                        </div>
+                                                                                    </Link>
+                                                                                );
+                                                                            })}
+                                                                        </div>
+                                                                    </div>
+                                                                );
+                                                            })()}
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        )}
+                                    
+        </React.Fragment>
+    );
+}, (prevProps, nextProps) => {
+    return (
+        prevProps.isExpanded === nextProps.isExpanded &&
+        prevProps.isHighlighted === nextProps.isHighlighted &&
+        prevProps.issue.id === nextProps.issue.id &&
+        prevProps.issue.score === nextProps.issue.score &&
+        prevProps.issue.rank === nextProps.issue.rank &&
+        prevProps.issue.daysPending === nextProps.issue.daysPending &&
+        prevProps.issue.complaintsCount === nextProps.issue.complaintsCount
+    );
+});
+
 function IssuesContent() {
     const [issues, setIssues] = useState<Issue[]>([]);
     const [stats, setStats] = useState<Statistics | null>(null);
@@ -238,26 +484,7 @@ function IssuesContent() {
         });
     };
 
-    const getLabelStyle = (label: string) => {
-        switch (label) {
-            case "Critical": return "bg-red-100 text-red-800";
-            case "Attention Required": return "bg-amber-100 text-amber-800";
-            case "Stable": return "bg-emerald-100 text-emerald-800";
-            default: return "bg-slate-100 text-slate-800";
-        }
-    };
 
-    const getScoreColor = (score: number) => {
-        if (score >= 65) return "text-red-700";
-        if (score >= 40) return "text-amber-600";
-        return "text-emerald-700";
-    };
-
-    const getHealthColor = (score: number) => {
-        if (score >= 70) return "text-emerald-700";
-        if (score >= 45) return "text-amber-600";
-        return "text-red-700";
-    };
 
     if (loading) {
         return (
@@ -377,214 +604,16 @@ function IssuesContent() {
                                 </tr>
                             ) : (
                                 issues.map((issue) => (
-                                    <React.Fragment key={issue.id}>
-                                        <tr
-                                            ref={issue.id === highlightId ? highlightRef : undefined}
-                                            className={`hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer ${expandedRows.has(issue.id) ? "bg-slate-50 dark:bg-slate-800/50" : ""
-                                                } ${issue.id === highlightId ? "ring-2 ring-blue-400 ring-inset" : ""}`}
-                                            onClick={() => toggleRow(issue.id)}
-                                        >
-                                            {/* Rank */}
-                                            <td className="px-4 py-3.5 text-center">
-                                                <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold ${issue.rank <= 3
-                                                    ? "bg-red-100 text-red-800"
-                                                    : issue.rank <= 7
-                                                        ? "bg-amber-100 text-amber-700"
-                                                        : "bg-slate-100 text-slate-600"
-                                                    }`}>
-                                                    {issue.rank}
-                                                </span>
-                                            </td>
-
-                                            {/* Score */}
-                                            <td className="px-4 py-3.5 text-center">
-                                                <span className={`text-lg font-bold ${getScoreColor(issue.score)}`}>
-                                                    {issue.score}
-                                                </span>
-                                                <span className="text-xs text-slate-400 block">
-                                                    p{issue.percentile}
-                                                </span>
-                                            </td>
-
-                                            {/* Issue details */}
-                                            <td className="px-4 py-3.5">
-                                                <div className="flex items-center gap-2">
-                                                    <span className="font-medium text-slate-900 dark:text-slate-100 leading-tight">{issue.title}</span>
-                                                    {issue.source === "live-portal" && (
-                                                        <span className="shrink-0 text-[9px] font-bold uppercase tracking-wider text-red-500 bg-red-50 dark:bg-red-900/20 px-1.5 py-0.5 rounded animate-pulse">
-                                                            LIVE
-                                                        </span>
-                                                    )}
-                                                </div>
-                                                <div className="text-xs text-slate-500 mt-0.5">{issue.region}</div>
-                                            </td>
-
-                                            {/* Issue Type */}
-                                            <td className="px-4 py-3.5">
-                                                <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wide border ${ISSUE_TYPE_COLORS[issue.issueType] || "bg-slate-100 text-slate-600"
-                                                    }`}>
-                                                    {ISSUE_TYPE_LABELS[issue.issueType] || issue.issueType}
-                                                </span>
-                                            </td>
-
-                                            {/* Priority label */}
-                                            <td className="px-4 py-3.5">
-                                                <span className={`inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium uppercase ${getLabelStyle(issue.label)}`}>
-                                                    {issue.label}
-                                                </span>
-                                            </td>
-
-                                            {/* Days pending */}
-                                            <td className="px-4 py-3.5 text-center">
-                                                <span className={`font-semibold ${issue.daysPending >= 90 ? "text-red-700" : issue.daysPending >= 30 ? "text-amber-600" : "text-slate-600"}`}>
-                                                    {issue.daysPending}d
-                                                </span>
-                                            </td>
-
-                                            {/* Complaints */}
-                                            <td className="px-4 py-3.5 text-center text-slate-700 dark:text-slate-300 font-medium">
-                                                {issue.complaintsCount}
-                                            </td>
-                                        </tr>
-
-                                        {/* Expanded Detail Panel */}
-                                        {expandedRows.has(issue.id) && (
-                                            <tr className="bg-slate-50/70 dark:bg-slate-800/30">
-                                                <td colSpan={7} className="px-6 py-5">
-                                                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                                                        {/* Left: Factor Breakdown */}
-                                                        <div>
-                                                            <h4 className="text-xs font-bold uppercase tracking-widest text-slate-500 mb-3">
-                                                                Factor Breakdown
-                                                            </h4>
-                                                            <div className="space-y-2">
-                                                                {(() => {
-                                                                    // Calculate max weight ONCE for the whole group instead of N times inside the loop
-                                                                    const maxWeighted = Math.max(
-                                                                        0,
-                                                                        ...Object.values(issue.factorBreakdown).map((v) => v.weighted)
-                                                                    );
-                                                                    
-                                                                    return Object.entries(issue.factorBreakdown)
-                                                                        .sort(([, a], [, b]) => b.weighted - a.weighted)
-                                                                        .map(([key, val]) => {
-                                                                            const barWidth = maxWeighted > 0 ? (val.weighted / maxWeighted) * 100 : 0;
-
-                                                                            return (
-                                                                                <div key={key} className="flex items-center gap-3">
-                                                                                    <span className="text-xs text-slate-600 w-32 shrink-0 truncate">
-                                                                                        {FACTOR_LABELS[key] || key}
-                                                                                    </span>
-                                                                                    <div className="flex-1 h-4 bg-slate-200 rounded-sm overflow-hidden transform-gpu">
-                                                                                        <div
-                                                                                            className={`h-full rounded-sm transition-all duration-300 ${val.weighted >= 12 ? "bg-red-500" : val.weighted >= 6 ? "bg-amber-500" : "bg-slate-400"
-                                                                                                }`}
-                                                                                            style={{ width: `${barWidth}%` }}
-                                                                                        />
-                                                                                    </div>
-                                                                                    <span className="text-xs font-mono text-slate-500 w-14 text-right">
-                                                                                        {val.weighted.toFixed(1)}
-                                                                                    </span>
-                                                                                    <span className="text-[10px] text-slate-400 w-12 text-right">
-                                                                                        {val.contribution}
-                                                                                    </span>
-                                                                                </div>
-                                                                            );
-                                                                        });
-                                                                })()}
-                                                            </div>
-                                                            <div className="mt-3 flex items-center gap-4 text-xs text-slate-500">
-                                                                <span>Total: <strong className={getScoreColor(issue.score)}>{issue.score}/100</strong></span>
-                                                                <span>Percentile: <strong>p{issue.percentile}</strong></span>
-                                                                <span>Z-Score: <strong>{issue.zScore}</strong></span>
-                                                                <span>Confidence: <strong className="capitalize">{issue.confidence}</strong></span>
-                                                            </div>
-                                                        </div>
-
-                                                        {/* Right: AI Reasoning */}
-                                                        <div>
-                                                            <h4 className="text-xs font-bold uppercase tracking-widest text-slate-500 mb-3">
-                                                                AI Reasoning
-                                                            </h4>
-                                                            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md p-4">
-                                                                <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
-                                                                    {issue.aiReasoning}
-                                                                </p>
-                                                            </div>
-
-                                                            {issue.comparisonToNext && (
-                                                                <div className="mt-3">
-                                                                    <h5 className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1.5">
-                                                                        Comparison to Next Rank
-                                                                    </h5>
-                                                                    <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md p-3">
-                                                                        {issue.comparisonToNext}
-                                                                    </p>
-                                                                </div>
-                                                            )}
-
-                                                            <div className="mt-3 text-xs text-slate-500 italic">
-                                                                {issue.description}
-                                                            </div>
-
-                                                            {/* AI Solution Button */}
-                                                            <button
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    setAiSolutionIssue({ id: issue.id, title: issue.title, score: issue.score });
-                                                                }}
-                                                                className="mt-4 inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white text-xs font-bold uppercase tracking-wider shadow-md hover:shadow-lg transition-all duration-200"
-                                                            >
-                                                                <BrainCircuit className="h-4 w-4" />
-                                                                Get AI Solution
-                                                            </button>
-
-                                                            {/* Linked Commitments Section */}
-                                                            {(() => {
-                                                                const linked = getLinkedCommitments(issue.id);
-                                                                if (linked.length === 0) return null;
-                                                                return (
-                                                                    <div className="mt-4 border-t border-slate-200 pt-3">
-                                                                        <h5 className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2 flex items-center gap-1.5">
-                                                                            <CheckSquare className="h-3 w-3" />
-                                                                            Linked Commitments
-                                                                        </h5>
-                                                                        <div className="space-y-2">
-                                                                            {linked.map((cmt) => {
-                                                                                const statusColor =
-                                                                                    cmt.status === "Completed" || cmt.status === "On Track"
-                                                                                        ? "bg-emerald-100 text-emerald-700 border-emerald-200"
-                                                                                        : cmt.status === "Delayed" || cmt.status === "At Risk"
-                                                                                            ? "bg-amber-100 text-amber-700 border-amber-200"
-                                                                                            : "bg-slate-100 text-slate-600 border-slate-200";
-                                                                                return (
-                                                                                    <Link
-                                                                                        key={cmt.id}
-                                                                                        href="/commitments"
-                                                                                        className="flex items-center justify-between bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md px-3 py-2 hover:border-blue-300 hover:bg-blue-50/30 dark:hover:bg-slate-800 transition-colors group"
-                                                                                    >
-                                                                                        <span className="text-xs text-slate-700 dark:text-slate-300 font-medium group-hover:text-blue-700 transition-colors">
-                                                                                            {cmt.title}
-                                                                                        </span>
-                                                                                        <div className="flex items-center gap-2">
-                                                                                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase border ${statusColor}`}>
-                                                                                                {cmt.status}
-                                                                                            </span>
-                                                                                            <ExternalLink className="h-3 w-3 text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity" />
-                                                                                        </div>
-                                                                                    </Link>
-                                                                                );
-                                                                            })}
-                                                                        </div>
-                                                                    </div>
-                                                                );
-                                                            })()}
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        )}
-                                    </React.Fragment>
+                                    <IssueRow
+                                        key={issue.id}
+                                        issue={issue}
+                                        isExpanded={expandedRows.has(issue.id)}
+                                        isHighlighted={issue.id === highlightId}
+                                        innerRef={issue.id === highlightId ? highlightRef : undefined}
+                                        onToggle={toggleRow}
+                                        onGetSolution={(id, title, score) => setAiSolutionIssue({ id, title, score })}
+                                        getLinkedCommitments={getLinkedCommitments}
+                                    />
                                 ))
                             )}
                         </tbody>
